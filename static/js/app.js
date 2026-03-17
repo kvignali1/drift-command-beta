@@ -5,6 +5,8 @@ const pageDots = [
 ];
 const boxButtons = document.querySelectorAll(".box-button");
 const appShellEl = document.querySelector(".app-shell");
+const menuToggleEl = document.getElementById("button-box-menu-toggle");
+const menuDropdownEl = document.getElementById("button-box-menu");
 
 let currentPage = 0;
 let touchStartX = null;
@@ -80,6 +82,12 @@ function handleSwipe(deltaX) {
   }
 }
 
+function setMenuOpen(isOpen) {
+  menuDropdownEl.hidden = !isOpen;
+  menuToggleEl.classList.toggle("open", isOpen);
+  menuToggleEl.setAttribute("aria-expanded", String(isOpen));
+}
+
 appShellEl.addEventListener("touchstart", (event) => {
   touchStartX = event.changedTouches[0].clientX;
   touchStartY = event.changedTouches[0].clientY;
@@ -115,6 +123,21 @@ appShellEl.addEventListener("touchcancel", () => {
   touchStartY = null;
 });
 
+menuToggleEl.addEventListener("click", (event) => {
+  event.stopPropagation();
+  setMenuOpen(menuDropdownEl.hidden);
+});
+
+menuDropdownEl.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".menu-wrap")) {
+    setMenuOpen(false);
+  }
+});
+
 boxButtons.forEach((button) => {
   const setPressed = () => {
     button.classList.add("pressed");
@@ -133,3 +156,4 @@ boxButtons.forEach((button) => {
 setInterval(fetchTelemetry, 100);
 fetchTelemetry();
 setPage(0);
+setMenuOpen(false);
