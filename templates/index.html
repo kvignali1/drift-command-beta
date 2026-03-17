@@ -7,42 +7,73 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body>
-  <div class="dashboard">
-    <div class="header">
-      <div class="brand">DRIFT COMMAND</div>
-      <div class="subbrand">Left Foot Brake Industries</div>
+  <div class="app-shell">
+    <div id="page-track" class="page-track">
+      <section class="page">
+        <div class="dashboard">
+          <div class="header">
+            <div class="brand">DRIFT COMMAND</div>
+            <div class="subbrand">Left Foot Brake Industries</div>
+          </div>
+
+          <div class="main-panel">
+            <div class="gear-card">
+              <div class="label">GEAR</div>
+              <div id="gear" class="gear-value">N</div>
+            </div>
+
+            <div class="rpm-card">
+              <div class="label">RPM</div>
+
+              <div class="rpm-readout">
+                <span id="rpm-text">0</span>
+                <span class="rpm-max"> / <span id="rpm-max">9000</span></span>
+              </div>
+
+              <div class="rpm-bar-outer">
+                <div id="rpm-bar" class="rpm-bar-inner"></div>
+              </div>
+
+              <div id="shift-lights" class="shift-lights">
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+                <div class="light"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="swipe-hint">Swipe right for button box</div>
+        </div>
+      </section>
+
+      <section class="page">
+        <div class="dashboard">
+          <div class="header">
+            <div class="brand">BUTTON BOX</div>
+            <div class="subbrand">Prototype area for custom controls</div>
+          </div>
+
+          <div class="button-panel">
+            <button class="box-button" type="button">Button 1</button>
+            <button class="box-button" type="button">Button 2</button>
+            <button class="box-button" type="button">Button 3</button>
+            <button class="box-button" type="button">Button 4</button>
+          </div>
+
+          <div class="swipe-hint">Swipe left to return to dashboard</div>
+        </div>
+      </section>
     </div>
+  </div>
 
-    <div class="main-panel">
-      <div class="gear-card">
-        <div class="label">GEAR</div>
-        <div id="gear" class="gear-value">N</div>
-      </div>
-
-      <div class="rpm-card">
-        <div class="label">RPM</div>
-
-        <div class="rpm-readout">
-          <span id="rpm-text">0</span>
-          <span class="rpm-max"> / <span id="rpm-max">9000</span></span>
-        </div>
-
-        <div class="rpm-bar-outer">
-          <div id="rpm-bar" class="rpm-bar-inner"></div>
-        </div>
-
-        <div id="shift-lights" class="shift-lights">
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-          <div class="light"></div>
-        </div>
-      </div>
-    </div>
+  <div class="page-dots" aria-hidden="true">
+    <span id="dot-0" class="page-dot active"></span>
+    <span id="dot-1" class="page-dot"></span>
   </div>
 
   <script src="/static/js/app.js"></script>
