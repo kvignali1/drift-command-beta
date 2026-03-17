@@ -73,7 +73,7 @@ function handleSwipe(deltaX) {
     return;
   }
 
-  if (deltaX > 0) {
+  if (deltaX < 0) {
     setPage(1);
   } else {
     setPage(0);
