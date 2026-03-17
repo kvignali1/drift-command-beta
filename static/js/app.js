@@ -7,13 +7,53 @@ const pressableButtons = document.querySelectorAll(".box-button, .create-layout-
 const appShellEl = document.querySelector(".app-shell");
 const menuToggleEl = document.getElementById("button-box-menu-toggle");
 const menuDropdownEl = document.getElementById("button-box-menu");
+const settingsMenuItemEl = document.getElementById("settings-menu-item");
+const editLayoutMenuItemEl = document.getElementById("edit-layout-menu-item");
 const createLayoutButtonEl = document.getElementById("create-layout-button");
 const layoutPickerEl = document.getElementById("layout-picker");
 const layoutEmptyStateEl = document.querySelector(".layout-empty-state");
+const layoutBuilderEl = document.getElementById("layout-builder");
+const layoutCanvasEl = document.getElementById("layout-canvas");
+const builderLayoutTitleEl = document.getElementById("builder-layout-title");
+const layoutOptionEls = document.querySelectorAll(".layout-option");
+const buttonPaletteItemEl = document.getElementById("button-palette-item");
 
 let currentPage = 0;
 let touchStartX = null;
 let touchStartY = null;
+let activeDrag = null;
+let selectedLayout = null;
+
+const layoutTemplates = {
+  four: {
+    title: "4 Button Layout",
+    slots: [
+      { id: "four-1" },
+      { id: "four-2" },
+      { id: "four-3" },
+      { id: "four-4" },
+    ],
+  },
+  six: {
+    title: "6 Button Layout",
+    slots: [
+      { id: "six-1" },
+      { id: "six-2" },
+      { id: "six-3" },
+      { id: "six-4" },
+      { id: "six-5" },
+      { id: "six-6" },
+    ],
+  },
+  three: {
+    title: "3 Button Layout",
+    slots: [
+      { id: "three-1", extraClass: "slot-large" },
+      { id: "three-2" },
+      { id: "three-3" },
+    ],
+  },
+};
 
 async function fetchTelemetry() {
   try {
@@ -163,10 +203,138 @@ function isMenuEventTarget(target) {
 function openLayoutPicker() {
   layoutEmptyStateEl.classList.add("hidden");
   layoutPickerEl.classList.remove("hidden");
+  layoutBuilderEl.classList.add("hidden");
+}
+
+function openLayoutBuilder(layoutKey) {
+  const template = layoutTemplates[layoutKey];
+
+  if (!template) {
+    return;
+  }
+
+  selectedLayout = layoutKey;
+  builderLayoutTitleEl.textContent = template.title;
+  layoutCanvasEl.className = `layout-canvas canvas-${layoutKey}`;
+  layoutCanvasEl.innerHTML = template.slots
+    .map((slot) => {
+      const extraClass = slot.extraClass ? ` ${slot.extraClass}` : "";
+      return `<div class="drop-slot${extraClass}" data-slot-id="${slot.id}"></div>`;
+    })
+    .join("");
+
+  layoutEmptyStateEl.classList.add("hidden");
+  layoutPickerEl.classList.add("hidden");
+  layoutBuilderEl.classList.remove("hidden");
+}
+
+function resetLayoutFlow() {
+  layoutBuilderEl.classList.add("hidden");
+  layoutPickerEl.classList.remove("hidden");
+  setMenuOpen(false);
+}
+
+function shouldIgnoreSwipeTarget(target) {
+  return Boolean(target.closest(".menu-wrap, .layout-option, .create-layout-button, .palette-item, .drop-slot, .slot-filled-button, .component-sidebar"));
+}
+
+function updateDragGhostPosition(clientX, clientY) {
+  if (!activeDrag) {
+    return;
+  }
+
+  activeDrag.ghostEl.style.left = `${clientX}px`;
+  activeDrag.ghostEl.style.top = `${clientY}px`;
+}
+
+function clearSlotHighlights() {
+  document.querySelectorAll(".drop-slot.active").forEach((slot) => {
+    slot.classList.remove("active");
+  });
+}
+
+function findDropSlotFromPoint(clientX, clientY) {
+  const elements = document.elementsFromPoint(clientX, clientY);
+
+  for (const element of elements) {
+    const slot = element.closest(".drop-slot");
+
+    if (slot) {
+      return slot;
+    }
+  }
+
+  return null;
+}
+
+function fillDropSlot(slot, label) {
+  slot.classList.add("filled");
+  slot.innerHTML = `<div class="slot-filled-button">${label}</div>`;
+}
+
+function handlePaletteDragMove(event) {
+  if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
+    return;
+  }
+
+  event.preventDefault();
+  updateDragGhostPosition(event.clientX, event.clientY);
+  clearSlotHighlights();
+
+  const slot = findDropSlotFromPoint(event.clientX, event.clientY);
+
+  if (slot) {
+    slot.classList.add("active");
+    activeDrag.currentSlot = slot;
+  } else {
+    activeDrag.currentSlot = null;
+  }
+}
+
+function stopPaletteDrag(event) {
+  if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (activeDrag.currentSlot) {
+    fillDropSlot(activeDrag.currentSlot, "Button");
+  }
+
+  clearSlotHighlights();
+  activeDrag.ghostEl.remove();
+  buttonPaletteItemEl.classList.remove("dragging");
+  document.removeEventListener("pointermove", handlePaletteDragMove);
+  document.removeEventListener("pointerup", stopPaletteDrag);
+  document.removeEventListener("pointercancel", stopPaletteDrag);
+  activeDrag = null;
+}
+
+function startPaletteDrag(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const ghostEl = document.createElement("div");
+  ghostEl.className = "drag-ghost";
+  ghostEl.textContent = "Button";
+  document.body.appendChild(ghostEl);
+
+  activeDrag = {
+    pointerId: event.pointerId,
+    ghostEl,
+    currentSlot: null,
+  };
+
+  buttonPaletteItemEl.classList.add("dragging");
+  updateDragGhostPosition(event.clientX, event.clientY);
+  document.addEventListener("pointermove", handlePaletteDragMove);
+  document.addEventListener("pointerup", stopPaletteDrag);
+  document.addEventListener("pointercancel", stopPaletteDrag);
 }
 
 appShellEl.addEventListener("touchstart", (event) => {
-  if (isMenuEventTarget(event.target)) {
+  if (isMenuEventTarget(event.target) || shouldIgnoreSwipeTarget(event.target)) {
     touchStartX = null;
     touchStartY = null;
     return;
@@ -226,6 +394,17 @@ document.addEventListener("pointerdown", (event) => {
 });
 
 createLayoutButtonEl.addEventListener("click", openLayoutPicker);
+settingsMenuItemEl.addEventListener("click", () => {
+  setMenuOpen(false);
+});
+editLayoutMenuItemEl.addEventListener("click", resetLayoutFlow);
+buttonPaletteItemEl.addEventListener("pointerdown", startPaletteDrag);
+
+layoutOptionEls.forEach((option) => {
+  option.addEventListener("click", () => {
+    openLayoutBuilder(option.dataset.layout);
+  });
+});
 
 pressableButtons.forEach((button) => {
   const setPressed = () => {
@@ -247,3 +426,4 @@ fetchTelemetry();
 setPage(0);
 setMenuOpen(false);
 layoutPickerEl.classList.add("hidden");
+layoutBuilderEl.classList.add("hidden");

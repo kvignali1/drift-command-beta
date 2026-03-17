@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=9" />
+  <link rel="stylesheet" href="/static/css/style.css?v=10" />
 </head>
 <body>
   <div class="app-shell">
@@ -120,8 +120,8 @@
                 Menu +
               </button>
               <div id="button-box-menu" class="menu-dropdown">
-                <button class="menu-item" type="button">Settings</button>
-                <button class="menu-item" type="button">Edit Layout</button>
+                <button id="settings-menu-item" class="menu-item" type="button">Settings</button>
+                <button id="edit-layout-menu-item" class="menu-item" type="button">Edit Layout</button>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@
           </div>
 
           <div id="layout-picker" class="layout-picker">
-            <button class="layout-option" type="button">
+            <button class="layout-option" type="button" data-layout="four">
               <div class="layout-option-title">4 Button Layout</div>
               <div class="layout-option-preview preview-four">
                 <span class="layout-slot"></span>
@@ -150,7 +150,7 @@
               </div>
             </button>
 
-            <button class="layout-option" type="button">
+            <button class="layout-option" type="button" data-layout="six">
               <div class="layout-option-title">6 Button Layout</div>
               <div class="layout-option-preview preview-six">
                 <div class="preview-column">
@@ -166,7 +166,7 @@
               </div>
             </button>
 
-            <button class="layout-option" type="button">
+            <button class="layout-option" type="button" data-layout="three">
               <div class="layout-option-title">3 Button Layout</div>
               <div class="layout-option-preview preview-three">
                 <span class="layout-slot preview-large"></span>
@@ -176,6 +176,29 @@
                 </div>
               </div>
             </button>
+          </div>
+
+          <div id="layout-builder" class="layout-builder hidden">
+            <div class="builder-stage-shell">
+              <div class="builder-stage-topbar">
+                <div>
+                  <div class="layout-title" id="builder-layout-title">4 Button Layout</div>
+                  <div class="layout-copy">Drag components from the tray into the layout slots.</div>
+                </div>
+              </div>
+
+              <div id="layout-canvas" class="layout-canvas"></div>
+            </div>
+
+            <aside class="component-sidebar">
+              <div class="component-sidebar-title">Component Tray</div>
+              <div class="component-sidebar-copy">Drag a small button into any slot to place it.</div>
+
+              <div id="button-palette-item" class="palette-item" role="button" tabindex="0">
+                <div class="palette-item-label">Button</div>
+                <div class="palette-item-caption">Drag into layout</div>
+              </div>
+            </aside>
           </div>
 
           <div class="swipe-hint">Swipe right to return to dashboard</div>
@@ -189,6 +212,6 @@
     <span id="dot-1" class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=9"></script>
+  <script src="/static/js/app.js?v=10"></script>
 </body>
 </html>
