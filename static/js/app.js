@@ -3,10 +3,13 @@ const pageDots = [
   document.getElementById("dot-0"),
   document.getElementById("dot-1"),
 ];
-const boxButtons = document.querySelectorAll(".box-button");
+const pressableButtons = document.querySelectorAll(".box-button, .create-layout-button, .layout-option");
 const appShellEl = document.querySelector(".app-shell");
 const menuToggleEl = document.getElementById("button-box-menu-toggle");
 const menuDropdownEl = document.getElementById("button-box-menu");
+const createLayoutButtonEl = document.getElementById("create-layout-button");
+const layoutPickerEl = document.getElementById("layout-picker");
+const layoutEmptyStateEl = document.querySelector(".layout-empty-state");
 
 let currentPage = 0;
 let touchStartX = null;
@@ -92,6 +95,11 @@ function isMenuEventTarget(target) {
   return Boolean(target.closest(".menu-wrap"));
 }
 
+function openLayoutPicker() {
+  layoutEmptyStateEl.classList.add("hidden");
+  layoutPickerEl.classList.remove("hidden");
+}
+
 appShellEl.addEventListener("touchstart", (event) => {
   if (isMenuEventTarget(event.target)) {
     touchStartX = null;
@@ -152,7 +160,9 @@ document.addEventListener("pointerdown", (event) => {
   }
 });
 
-boxButtons.forEach((button) => {
+createLayoutButtonEl.addEventListener("click", openLayoutPicker);
+
+pressableButtons.forEach((button) => {
   const setPressed = () => {
     button.classList.add("pressed");
   };
@@ -171,3 +181,4 @@ setInterval(fetchTelemetry, 100);
 fetchTelemetry();
 setPage(0);
 setMenuOpen(false);
+layoutPickerEl.classList.add("hidden");

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=5" />
+  <link rel="stylesheet" href="/static/css/style.css?v=7" />
 </head>
 <body>
   <div class="app-shell">
@@ -67,14 +67,54 @@
 
           <div class="header">
             <div class="brand">BUTTON BOX</div>
-            <div class="subbrand">Prototype area for custom controls</div>
+            <div class="subbrand">Choose a starter layout for your button box</div>
           </div>
 
-          <div class="button-panel">
-            <button class="box-button" type="button">Button 1</button>
-            <button class="box-button" type="button">Button 2</button>
-            <button class="box-button" type="button">Button 3</button>
-            <button class="box-button" type="button">Button 4</button>
+          <div class="layout-empty-state">
+            <div class="layout-card">
+              <div class="layout-title">Create Layout</div>
+              <div class="layout-copy">Start with a preset button layout, then we can customize it however you want.</div>
+              <button id="create-layout-button" class="create-layout-button" type="button">Create Layout</button>
+            </div>
+          </div>
+
+          <div id="layout-picker" class="layout-picker">
+            <button class="layout-option" type="button">
+              <div class="layout-option-title">4 Button Layout</div>
+              <div class="layout-option-preview preview-four">
+                <span class="layout-slot"></span>
+                <span class="layout-slot"></span>
+                <span class="layout-slot"></span>
+                <span class="layout-slot"></span>
+              </div>
+            </button>
+
+            <button class="layout-option" type="button">
+              <div class="layout-option-title">6 Button Layout</div>
+              <div class="layout-option-preview preview-six">
+                <div class="preview-column">
+                  <span class="layout-slot"></span>
+                  <span class="layout-slot"></span>
+                  <span class="layout-slot"></span>
+                </div>
+                <div class="preview-column">
+                  <span class="layout-slot"></span>
+                  <span class="layout-slot"></span>
+                  <span class="layout-slot"></span>
+                </div>
+              </div>
+            </button>
+
+            <button class="layout-option" type="button">
+              <div class="layout-option-title">3 Button Layout</div>
+              <div class="layout-option-preview preview-three">
+                <span class="layout-slot preview-large"></span>
+                <div class="preview-column">
+                  <span class="layout-slot"></span>
+                  <span class="layout-slot"></span>
+                </div>
+              </div>
+            </button>
           </div>
 
           <div class="swipe-hint">Swipe left to return to dashboard</div>
@@ -88,6 +128,6 @@
     <span id="dot-1" class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=5"></script>
+  <script src="/static/js/app.js?v=7"></script>
 </body>
 </html>
