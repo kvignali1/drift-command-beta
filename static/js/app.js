@@ -83,7 +83,7 @@ function handleSwipe(deltaX) {
 }
 
 function setMenuOpen(isOpen) {
-  menuDropdownEl.hidden = !isOpen;
+  menuDropdownEl.classList.toggle("open", isOpen);
   menuToggleEl.classList.toggle("open", isOpen);
   menuToggleEl.setAttribute("aria-expanded", String(isOpen));
 }
@@ -136,21 +136,17 @@ appShellEl.addEventListener("touchcancel", () => {
 function toggleMenu(event) {
   event.preventDefault();
   event.stopPropagation();
-  setMenuOpen(menuDropdownEl.hidden);
+  setMenuOpen(!menuDropdownEl.classList.contains("open"));
 }
 
 menuToggleEl.addEventListener("pointerdown", toggleMenu);
-
-menuDropdownEl.addEventListener("click", (event) => {
-  event.stopPropagation();
-});
 
 menuDropdownEl.addEventListener("pointerdown", (event) => {
   event.preventDefault();
   event.stopPropagation();
 });
 
-document.addEventListener("click", (event) => {
+document.addEventListener("pointerdown", (event) => {
   if (!event.target.closest(".menu-wrap")) {
     setMenuOpen(false);
   }
