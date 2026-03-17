@@ -87,6 +87,10 @@ body {
   z-index: 10;
 }
 
+.menu-dropdown[hidden] {
+  display: none !important;
+}
+
 .menu-item {
   width: 100%;
   min-height: 62px;
