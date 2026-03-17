@@ -190,7 +190,7 @@ body {
 }
 
 .layout-option {
-  min-height: 320px;
+  min-height: 400px;
   padding: 24px 20px;
   border: 2px solid #2d2d2d;
   border-radius: 24px;
@@ -200,7 +200,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .layout-option:active,
@@ -218,7 +218,7 @@ body {
 
 .layout-option-preview {
   flex: 1;
-  min-height: 180px;
+  min-height: 260px;
   border: 2px solid #292929;
   border-radius: 20px;
   background:
@@ -239,23 +239,29 @@ body {
 .preview-four {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  height: 100%;
   gap: 14px;
 }
 
 .preview-six {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: 100%;
   gap: 16px;
 }
 
 .preview-three {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
+  height: 100%;
   gap: 16px;
 }
 
 .preview-column {
   display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  height: 100%;
   gap: 14px;
 }
 
@@ -267,6 +273,10 @@ body {
 
 .preview-large {
   min-height: 100%;
+}
+
+.preview-three .preview-column {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
 .create-layout-button {
@@ -295,6 +305,10 @@ body {
   }
 
   .layout-option {
+    min-height: 280px;
+  }
+
+  .layout-option-preview {
     min-height: 220px;
   }
 }
