@@ -4,269 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=11" />
+  <link rel="stylesheet" href="/static/css/style.css?v=14" />
 </head>
 <body>
   <div class="app-shell">
-    <div id="page-track" class="page-track">
-      <section class="page">
-        <div class="dashboard telemetry-dashboard">
-          <div class="telemetry-shell">
-            <div class="telemetry-topbar">
-              <div class="telemetry-mark">
-                <div class="brand">DRIFT COMMAND</div>
-                <div class="subbrand">Performance telemetry interface</div>
-              </div>
-              <div class="telemetry-status-pill">
-                <span class="status-dot"></span>
-                Live Telemetry
-              </div>
-            </div>
+    <div id="page-track" class="page-track"></div>
+  </div>
 
-            <div class="telemetry-hud">
-              <div class="telemetry-side">
-                <div class="telemetry-card gear-panel">
-                  <div class="telemetry-label">Gear</div>
-                  <div id="gear" class="gear-value">N</div>
-                  <div id="drive-state" class="telemetry-note">Standby</div>
-                </div>
-
-                <div class="telemetry-card">
-                  <div class="telemetry-label">Shift Point</div>
-                  <div id="shift-threshold" class="telemetry-metric">7000</div>
-                  <div class="telemetry-note">RPM target</div>
-                </div>
-              </div>
-
-              <div class="telemetry-center">
-                <div class="rpm-ring-shell">
-                  <div id="rpm-ring" class="rpm-ring">
-                    <div class="rpm-ring-core">
-                      <div class="telemetry-label">Engine Speed</div>
-                      <div class="rpm-readout">
-                        <span id="rpm-text">0</span>
-                        <span class="rpm-unit">RPM</span>
-                      </div>
-                      <div class="rpm-maxline">MAX <span id="rpm-max">9000</span></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="telemetry-bandline">
-                  <div id="power-band" class="band-chip">Idle</div>
-                  <div id="rpm-percent" class="band-percent">0%</div>
-                </div>
-
-                <div class="rpm-bar-outer">
-                  <div id="rpm-bar" class="rpm-bar-inner"></div>
-                </div>
-
-                <div id="shift-lights" class="shift-lights">
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                  <div class="light"></div>
-                </div>
-              </div>
-
-              <div class="telemetry-side">
-                <div class="telemetry-card">
-                  <div class="telemetry-label">Shift Status</div>
-                  <div id="shift-status" class="telemetry-metric">Build RPM</div>
-                  <div class="telemetry-note">Climb into the band</div>
-                </div>
-
-                <div class="telemetry-card">
-                  <div class="telemetry-label">Headroom</div>
-                  <div id="headroom-value" class="telemetry-metric">9000</div>
-                  <div class="telemetry-note">RPM remaining</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="telemetry-grid">
-              <div class="metric-tile">
-                <div class="telemetry-label">Engine Load</div>
-                <div id="load-value" class="grid-metric">0%</div>
-              </div>
-              <div class="metric-tile">
-                <div class="telemetry-label">Power Band</div>
-                <div id="band-value" class="grid-metric">Idle</div>
-              </div>
-              <div class="metric-tile">
-                <div class="telemetry-label">Target</div>
-                <div id="target-value" class="grid-metric">7000</div>
-              </div>
-              <div class="metric-tile">
-                <div class="telemetry-label">Working Window</div>
-                <div id="window-value" class="grid-metric">7000-9000</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="swipe-hint">Swipe left for button box</div>
-        </div>
-      </section>
-
-      <section class="page">
-        <div class="dashboard">
-          <div class="button-box-topbar">
-            <div class="menu-wrap">
-              <button id="button-box-menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="button-box-menu">
-                Menu +
-              </button>
-              <div id="button-box-menu" class="menu-dropdown">
-                <button id="settings-menu-item" class="menu-item" type="button">Settings</button>
-                <button id="edit-layout-menu-item" class="menu-item" type="button">Edit Layout</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="header">
-            <div class="brand">BUTTON BOX</div>
-            <div class="subbrand">Choose a starter layout for your button box</div>
-          </div>
-
-          <div class="layout-empty-state">
-            <div class="layout-card">
-              <div class="layout-title">Create Layout</div>
-              <div class="layout-copy">Start with a preset button layout, then we can customize it however you want.</div>
-              <button id="create-layout-button" class="create-layout-button" type="button">Create Layout</button>
-            </div>
-          </div>
-
-          <div id="layout-picker" class="layout-picker">
-            <button class="layout-option" type="button" data-layout="four">
-              <div class="layout-option-title">4 Button Layout</div>
-              <div class="layout-option-preview preview-four">
-                <span class="layout-slot"></span>
-                <span class="layout-slot"></span>
-                <span class="layout-slot"></span>
-                <span class="layout-slot"></span>
-              </div>
-            </button>
-
-            <button class="layout-option" type="button" data-layout="six">
-              <div class="layout-option-title">6 Button Layout</div>
-              <div class="layout-option-preview preview-six">
-                <div class="preview-column">
-                  <span class="layout-slot"></span>
-                  <span class="layout-slot"></span>
-                  <span class="layout-slot"></span>
-                </div>
-                <div class="preview-column">
-                  <span class="layout-slot"></span>
-                  <span class="layout-slot"></span>
-                  <span class="layout-slot"></span>
-                </div>
-              </div>
-            </button>
-
-            <button class="layout-option" type="button" data-layout="three">
-              <div class="layout-option-title">3 Button Layout</div>
-              <div class="layout-option-preview preview-three">
-                <span class="layout-slot preview-large"></span>
-                <div class="preview-column">
-                  <span class="layout-slot"></span>
-                  <span class="layout-slot"></span>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          <div id="layout-builder" class="layout-builder hidden">
-            <div class="builder-stage-shell">
-              <div class="builder-stage-topbar">
-                <div>
-                  <div class="layout-title" id="builder-layout-title">4 Button Layout</div>
-                  <div class="layout-copy">Drag components from the tray into the layout slots.</div>
-                </div>
-              </div>
-
-              <div id="layout-canvas" class="layout-canvas"></div>
-            </div>
-
-            <aside class="component-sidebar">
-              <div class="component-sidebar-title">Component Tray</div>
-              <div class="component-sidebar-copy">Drag controls into a slot. Drag a placed control back here to remove it.</div>
-
-              <div id="component-dropzone" class="component-dropzone">
-                Drop Here To Remove
-              </div>
-
-              <div class="palette-list">
-                <div class="palette-item" role="button" tabindex="0" data-component-type="button" data-component-label="Button">
-                  <div class="palette-item-preview preview-button">
-                    <div class="control-face control-button-face">
-                      <div class="control-button-cap"></div>
-                    </div>
-                  </div>
-                  <div class="palette-item-label">Button</div>
-                  <div class="palette-item-caption">Momentary push</div>
-                </div>
-
-                <div class="palette-item" role="button" tabindex="0" data-component-type="toggle" data-component-label="Toggle">
-                  <div class="palette-item-preview preview-toggle">
-                    <div class="control-face control-toggle-face">
-                      <div class="control-toggle-base"></div>
-                      <div class="control-toggle-lever"></div>
-                    </div>
-                  </div>
-                  <div class="palette-item-label">Toggle</div>
-                  <div class="palette-item-caption">Metal switch</div>
-                </div>
-
-                <div class="palette-item" role="button" tabindex="0" data-component-type="rocker" data-component-label="Rocker">
-                  <div class="palette-item-preview preview-rocker">
-                    <div class="control-face control-rocker-face">
-                      <div class="control-rocker-top">ON</div>
-                      <div class="control-rocker-bottom">OFF</div>
-                    </div>
-                  </div>
-                  <div class="palette-item-label">Rocker</div>
-                  <div class="palette-item-caption">Dash switch</div>
-                </div>
-
-                <div class="palette-item" role="button" tabindex="0" data-component-type="light" data-component-label="Light">
-                  <div class="palette-item-preview preview-light">
-                    <div class="control-face control-light-face">
-                      <div class="control-light-lens"></div>
-                    </div>
-                  </div>
-                  <div class="palette-item-label">Light</div>
-                  <div class="palette-item-caption">Indicator lamp</div>
-                </div>
-
-                <div class="palette-item" role="button" tabindex="0" data-component-type="start" data-component-label="Start">
-                  <div class="palette-item-preview preview-start">
-                    <div class="control-face control-start-face">
-                      <div class="control-start-ring">
-                        <div class="control-start-core">START</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="palette-item-label">Start</div>
-                  <div class="palette-item-caption">Ignition button</div>
-                </div>
-              </div>
-            </aside>
-          </div>
-
-          <div class="swipe-hint">Swipe right to return to dashboard</div>
-        </div>
-      </section>
+  <div id="delete-confirm-modal" class="confirm-modal hidden">
+    <div class="confirm-dialog">
+      <div class="confirm-title">Delete Current Layout?</div>
+      <div class="confirm-copy">This will remove the current layout and take you back to Create Layout.</div>
+      <div class="confirm-actions">
+        <button id="confirm-delete-yes" class="confirm-button confirm-button-danger" type="button">Yes</button>
+        <button id="confirm-delete-no" class="confirm-button" type="button">No</button>
+      </div>
     </div>
   </div>
 
   <div class="page-dots" aria-hidden="true">
-    <span id="dot-0" class="page-dot active"></span>
-    <span id="dot-1" class="page-dot"></span>
+    <span class="page-dot active"></span>
+    <span class="page-dot"></span>
+    <span class="page-dot"></span>
+    <span class="page-dot"></span>
+    <span class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=11"></script>
+  <script src="/static/js/app.js?v=14"></script>
 </body>
 </html>
