@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drift Command</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <div class="header">
+      <div class="brand">DRIFT COMMAND</div>
+      <div class="subbrand">Left Foot Brake Industries</div>
+    </div>
+
+    <div class="main-panel">
+      <div class="gear-card">
+        <div class="label">GEAR</div>
+        <div id="gear" class="gear-value">N</div>
+      </div>
+
+      <div class="rpm-card">
+        <div class="label">RPM</div>
+
+        <div class="rpm-readout">
+          <span id="rpm-text">0</span>
+          <span class="rpm-max"> / <span id="rpm-max">9000</span></span>
+        </div>
+
+        <div class="rpm-bar-outer">
+          <div id="rpm-bar" class="rpm-bar-inner"></div>
+        </div>
+
+        <div id="shift-lights" class="shift-lights">
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
