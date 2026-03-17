@@ -154,7 +154,7 @@ function getTelemetryPageMarkup() {
           </div>
         </div>
 
-        <div class="swipe-hint">Swipe right for layout 1</div>
+        <div class="swipe-hint">Swipe left for layout 1</div>
       </div>
     </section>
   `;
@@ -276,7 +276,7 @@ function getPaletteMarkup() {
 function getLayoutPageMarkup(layoutPageIndex) {
   const pageNumber = layoutPageIndex + 1;
   const previousHint = layoutPageIndex === 0 ? "dashboard" : `layout ${pageNumber - 1}`;
-  const nextHint = layoutPageIndex === TOTAL_LAYOUT_PAGES - 1 ? "" : ` or right for layout ${pageNumber + 1}`;
+  const nextHint = layoutPageIndex === TOTAL_LAYOUT_PAGES - 1 ? "" : ` or left for layout ${pageNumber + 1}`;
 
   return `
     <section class="page button-box-page" data-layout-page="${layoutPageIndex}">
@@ -331,7 +331,7 @@ function getLayoutPageMarkup(layoutPageIndex) {
           </aside>
         </div>
 
-        <div class="swipe-hint">Swipe left for ${previousHint}${nextHint}</div>
+        <div class="swipe-hint">Swipe right for ${previousHint}${nextHint}</div>
       </div>
     </section>
   `;
@@ -497,7 +497,7 @@ function handleSwipe(deltaX) {
     return;
   }
 
-  if (deltaX > 0) {
+  if (deltaX < 0) {
     setPage(currentPage + 1);
   } else {
     setPage(currentPage - 1);
