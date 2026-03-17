@@ -30,18 +30,47 @@ function updateDashboard(data) {
   const rpmTextEl = document.getElementById("rpm-text");
   const rpmMaxEl = document.getElementById("rpm-max");
   const rpmBarEl = document.getElementById("rpm-bar");
+  const rpmRingEl = document.getElementById("rpm-ring");
+  const rpmPercentEl = document.getElementById("rpm-percent");
+  const driveStateEl = document.getElementById("drive-state");
+  const shiftThresholdEl = document.getElementById("shift-threshold");
+  const shiftStatusEl = document.getElementById("shift-status");
+  const headroomValueEl = document.getElementById("headroom-value");
+  const loadValueEl = document.getElementById("load-value");
+  const bandValueEl = document.getElementById("band-value");
+  const targetValueEl = document.getElementById("target-value");
+  const windowValueEl = document.getElementById("window-value");
+  const powerBandEl = document.getElementById("power-band");
   const lights = document.querySelectorAll("#shift-lights .light");
 
   const gear = data.gear ?? "N";
   const rpm = data.rpm ?? 0;
   const rpmMax = data.rpm_max ?? 9000;
+  const shiftThreshold = data.shift_light_threshold ?? 7000;
 
   gearEl.textContent = gear;
   rpmTextEl.textContent = rpm;
   rpmMaxEl.textContent = rpmMax;
 
   const rpmPercent = Math.max(0, Math.min(100, (rpm / rpmMax) * 100));
+  const roundedRpmPercent = Math.round(rpmPercent);
+  const headroom = Math.max(0, rpmMax - rpm);
+  const bandName = getBandName(rpm, shiftThreshold, rpmMax);
+  const shiftStatus = getShiftStatus(rpm, shiftThreshold, rpmMax);
+  const rpmAngle = `${Math.max(18, rpmPercent * 2.8)}deg`;
+
   rpmBarEl.style.width = `${rpmPercent}%`;
+  rpmRingEl.style.setProperty("--rpm-progress-angle", rpmAngle);
+  rpmPercentEl.textContent = `${roundedRpmPercent}%`;
+  driveStateEl.textContent = gear === "N" ? "Standby" : `Gear ${gear} engaged`;
+  shiftThresholdEl.textContent = shiftThreshold;
+  shiftStatusEl.textContent = shiftStatus;
+  headroomValueEl.textContent = headroom;
+  loadValueEl.textContent = `${roundedRpmPercent}%`;
+  bandValueEl.textContent = bandName;
+  targetValueEl.textContent = shiftThreshold;
+  windowValueEl.textContent = `${shiftThreshold}-${rpmMax}`;
+  powerBandEl.textContent = bandName;
 
   lights.forEach((light) => {
     light.className = "light";
@@ -62,6 +91,42 @@ function updateDashboard(data) {
       }
     }
   });
+}
+
+function getBandName(rpm, shiftThreshold, rpmMax) {
+  if (rpm < 1800) {
+    return "Idle";
+  }
+
+  if (rpm < shiftThreshold - 1400) {
+    return "Build";
+  }
+
+  if (rpm < shiftThreshold) {
+    return "Attack";
+  }
+
+  if (rpm < rpmMax) {
+    return "Shift";
+  }
+
+  return "Limiter";
+}
+
+function getShiftStatus(rpm, shiftThreshold, rpmMax) {
+  if (rpm >= rpmMax) {
+    return "Lift Now";
+  }
+
+  if (rpm >= shiftThreshold) {
+    return "Ready";
+  }
+
+  if (rpm >= shiftThreshold - 1000) {
+    return "Close";
+  }
+
+  return "Build RPM";
 }
 
 function setPage(pageIndex) {

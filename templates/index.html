@@ -4,50 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=8" />
+  <link rel="stylesheet" href="/static/css/style.css?v=9" />
 </head>
 <body>
   <div class="app-shell">
     <div id="page-track" class="page-track">
       <section class="page">
-        <div class="dashboard">
-          <div class="header">
-            <div class="brand">DRIFT COMMAND</div>
-            <div class="subbrand">Left Foot Brake Industries</div>
-          </div>
-
-          <div class="main-panel">
-            <div class="gear-card">
-              <div class="label">GEAR</div>
-              <div id="gear" class="gear-value">N</div>
-            </div>
-
-            <div class="rpm-card">
-              <div class="label">RPM</div>
-
-              <div class="rpm-readout">
-                <span id="rpm-text">0</span>
-                <span class="rpm-max"> / <span id="rpm-max">9000</span></span>
+        <div class="dashboard telemetry-dashboard">
+          <div class="telemetry-shell">
+            <div class="telemetry-topbar">
+              <div class="telemetry-mark">
+                <div class="brand">DRIFT COMMAND</div>
+                <div class="subbrand">Performance telemetry interface</div>
               </div>
-
-              <div class="rpm-bar-outer">
-                <div id="rpm-bar" class="rpm-bar-inner"></div>
-              </div>
-
-              <div id="shift-lights" class="shift-lights">
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
+              <div class="telemetry-status-pill">
+                <span class="status-dot"></span>
+                Live Telemetry
               </div>
             </div>
+
+            <div class="telemetry-hud">
+              <div class="telemetry-side">
+                <div class="telemetry-card gear-panel">
+                  <div class="telemetry-label">Gear</div>
+                  <div id="gear" class="gear-value">N</div>
+                  <div id="drive-state" class="telemetry-note">Standby</div>
+                </div>
+
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Shift Point</div>
+                  <div id="shift-threshold" class="telemetry-metric">7000</div>
+                  <div class="telemetry-note">RPM target</div>
+                </div>
+              </div>
+
+              <div class="telemetry-center">
+                <div class="rpm-ring-shell">
+                  <div id="rpm-ring" class="rpm-ring">
+                    <div class="rpm-ring-core">
+                      <div class="telemetry-label">Engine Speed</div>
+                      <div class="rpm-readout">
+                        <span id="rpm-text">0</span>
+                        <span class="rpm-unit">RPM</span>
+                      </div>
+                      <div class="rpm-maxline">MAX <span id="rpm-max">9000</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="telemetry-bandline">
+                  <div id="power-band" class="band-chip">Idle</div>
+                  <div id="rpm-percent" class="band-percent">0%</div>
+                </div>
+
+                <div class="rpm-bar-outer">
+                  <div id="rpm-bar" class="rpm-bar-inner"></div>
+                </div>
+
+                <div id="shift-lights" class="shift-lights">
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                  <div class="light"></div>
+                </div>
+              </div>
+
+              <div class="telemetry-side">
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Shift Status</div>
+                  <div id="shift-status" class="telemetry-metric">Build RPM</div>
+                  <div class="telemetry-note">Climb into the band</div>
+                </div>
+
+                <div class="telemetry-card">
+                  <div class="telemetry-label">Headroom</div>
+                  <div id="headroom-value" class="telemetry-metric">9000</div>
+                  <div class="telemetry-note">RPM remaining</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="telemetry-grid">
+              <div class="metric-tile">
+                <div class="telemetry-label">Engine Load</div>
+                <div id="load-value" class="grid-metric">0%</div>
+              </div>
+              <div class="metric-tile">
+                <div class="telemetry-label">Power Band</div>
+                <div id="band-value" class="grid-metric">Idle</div>
+              </div>
+              <div class="metric-tile">
+                <div class="telemetry-label">Target</div>
+                <div id="target-value" class="grid-metric">7000</div>
+              </div>
+              <div class="metric-tile">
+                <div class="telemetry-label">Working Window</div>
+                <div id="window-value" class="grid-metric">7000-9000</div>
+              </div>
+            </div>
           </div>
 
-          <div class="swipe-hint">Swipe right for button box</div>
+          <div class="swipe-hint">Swipe left for button box</div>
         </div>
       </section>
 
@@ -117,7 +178,7 @@
             </button>
           </div>
 
-          <div class="swipe-hint">Swipe left to return to dashboard</div>
+          <div class="swipe-hint">Swipe right to return to dashboard</div>
         </div>
       </section>
     </div>
@@ -128,6 +189,6 @@
     <span id="dot-1" class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=8"></script>
+  <script src="/static/js/app.js?v=9"></script>
 </body>
 </html>
