@@ -16,7 +16,8 @@ const layoutBuilderEl = document.getElementById("layout-builder");
 const layoutCanvasEl = document.getElementById("layout-canvas");
 const builderLayoutTitleEl = document.getElementById("builder-layout-title");
 const layoutOptionEls = document.querySelectorAll(".layout-option");
-const buttonPaletteItemEl = document.getElementById("button-palette-item");
+const paletteItemEls = document.querySelectorAll(".palette-item");
+const componentDropzoneEl = document.getElementById("component-dropzone");
 
 let currentPage = 0;
 let touchStartX = null;
@@ -53,6 +54,14 @@ const layoutTemplates = {
       { id: "three-3" },
     ],
   },
+};
+
+const componentCatalog = {
+  button: { label: "Button" },
+  toggle: { label: "Toggle" },
+  rocker: { label: "Rocker" },
+  light: { label: "Light" },
+  start: { label: "Start" },
 };
 
 async function fetchTelemetry() {
@@ -204,6 +213,7 @@ function openLayoutPicker() {
   layoutEmptyStateEl.classList.add("hidden");
   layoutPickerEl.classList.remove("hidden");
   layoutBuilderEl.classList.add("hidden");
+  clearTrayHighlight();
 }
 
 function openLayoutBuilder(layoutKey) {
@@ -232,10 +242,11 @@ function resetLayoutFlow() {
   layoutBuilderEl.classList.add("hidden");
   layoutPickerEl.classList.remove("hidden");
   setMenuOpen(false);
+  clearTrayHighlight();
 }
 
 function shouldIgnoreSwipeTarget(target) {
-  return Boolean(target.closest(".menu-wrap, .layout-option, .create-layout-button, .palette-item, .drop-slot, .slot-filled-button, .component-sidebar"));
+  return Boolean(target.closest(".menu-wrap, .layout-option, .create-layout-button, .palette-item, .drop-slot, .slot-filled-button, .component-sidebar, .component-dropzone"));
 }
 
 function updateDragGhostPosition(clientX, clientY) {
@@ -253,6 +264,10 @@ function clearSlotHighlights() {
   });
 }
 
+function clearTrayHighlight() {
+  componentDropzoneEl.classList.remove("drop-active");
+}
+
 function findDropSlotFromPoint(clientX, clientY) {
   const elements = document.elementsFromPoint(clientX, clientY);
 
@@ -267,12 +282,78 @@ function findDropSlotFromPoint(clientX, clientY) {
   return null;
 }
 
-function fillDropSlot(slot, label) {
-  slot.classList.add("filled");
-  slot.innerHTML = `<div class="slot-filled-button">${label}</div>`;
+function isPointerOverComponentTray(clientX, clientY) {
+  const elements = document.elementsFromPoint(clientX, clientY);
+
+  return elements.some((element) => element.closest("#component-dropzone"));
 }
 
-function handlePaletteDragMove(event) {
+function getControlVisualMarkup(componentType) {
+  switch (componentType) {
+    case "toggle":
+      return `
+        <div class="control-face control-toggle-face">
+          <div class="control-toggle-base"></div>
+          <div class="control-toggle-lever"></div>
+        </div>
+      `;
+    case "rocker":
+      return `
+        <div class="control-face control-rocker-face">
+          <div class="control-rocker-top">ON</div>
+          <div class="control-rocker-bottom">OFF</div>
+        </div>
+      `;
+    case "light":
+      return `
+        <div class="control-face control-light-face">
+          <div class="control-light-lens"></div>
+        </div>
+      `;
+    case "start":
+      return `
+        <div class="control-face control-start-face">
+          <div class="control-start-ring">
+            <div class="control-start-core">START</div>
+          </div>
+        </div>
+      `;
+    case "button":
+    default:
+      return `
+        <div class="control-face control-button-face">
+          <div class="control-button-cap"></div>
+        </div>
+      `;
+  }
+}
+
+function getSlotControlMarkup(componentType) {
+  const component = componentCatalog[componentType] ?? componentCatalog.button;
+
+  return `
+    <div class="slot-filled-button" data-component-type="${componentType}">
+      <div class="slot-control-visual">
+        ${getControlVisualMarkup(componentType)}
+      </div>
+      <div class="slot-control-label">${component.label}</div>
+    </div>
+  `;
+}
+
+function fillDropSlot(slot, componentType) {
+  slot.classList.add("filled");
+  slot.dataset.componentType = componentType;
+  slot.innerHTML = getSlotControlMarkup(componentType);
+}
+
+function clearDropSlot(slot) {
+  slot.classList.remove("filled");
+  delete slot.dataset.componentType;
+  slot.innerHTML = "";
+}
+
+function handleDragMove(event) {
   if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
     return;
   }
@@ -280,8 +361,10 @@ function handlePaletteDragMove(event) {
   event.preventDefault();
   updateDragGhostPosition(event.clientX, event.clientY);
   clearSlotHighlights();
+  clearTrayHighlight();
 
   const slot = findDropSlotFromPoint(event.clientX, event.clientY);
+  const overTray = isPointerOverComponentTray(event.clientX, event.clientY);
 
   if (slot) {
     slot.classList.add("active");
@@ -289,9 +372,15 @@ function handlePaletteDragMove(event) {
   } else {
     activeDrag.currentSlot = null;
   }
+
+  if (overTray) {
+    componentDropzoneEl.classList.add("drop-active");
+  }
+
+  activeDrag.overTray = overTray;
 }
 
-function stopPaletteDrag(event) {
+function stopDrag(event) {
   if (!activeDrag || event.pointerId !== activeDrag.pointerId) {
     return;
   }
@@ -299,38 +388,71 @@ function stopPaletteDrag(event) {
   event.preventDefault();
 
   if (activeDrag.currentSlot) {
-    fillDropSlot(activeDrag.currentSlot, "Button");
+    fillDropSlot(activeDrag.currentSlot, activeDrag.componentType);
+
+    if (activeDrag.originSlot && activeDrag.originSlot !== activeDrag.currentSlot) {
+      clearDropSlot(activeDrag.originSlot);
+    }
+  } else if (activeDrag.overTray && activeDrag.originSlot) {
+    clearDropSlot(activeDrag.originSlot);
   }
 
   clearSlotHighlights();
+  clearTrayHighlight();
   activeDrag.ghostEl.remove();
-  buttonPaletteItemEl.classList.remove("dragging");
-  document.removeEventListener("pointermove", handlePaletteDragMove);
-  document.removeEventListener("pointerup", stopPaletteDrag);
-  document.removeEventListener("pointercancel", stopPaletteDrag);
+  activeDrag.sourceEl.classList.remove("dragging");
+  document.removeEventListener("pointermove", handleDragMove);
+  document.removeEventListener("pointerup", stopDrag);
+  document.removeEventListener("pointercancel", stopDrag);
   activeDrag = null;
 }
 
-function startPaletteDrag(event) {
+function startDrag(event, sourceEl, componentType, originSlot = null) {
   event.preventDefault();
   event.stopPropagation();
 
+  const component = componentCatalog[componentType] ?? componentCatalog.button;
   const ghostEl = document.createElement("div");
   ghostEl.className = "drag-ghost";
-  ghostEl.textContent = "Button";
+  ghostEl.textContent = component.label;
   document.body.appendChild(ghostEl);
 
   activeDrag = {
     pointerId: event.pointerId,
+    componentType,
+    originSlot,
+    overTray: false,
+    sourceEl,
     ghostEl,
     currentSlot: null,
   };
 
-  buttonPaletteItemEl.classList.add("dragging");
+  sourceEl.classList.add("dragging");
   updateDragGhostPosition(event.clientX, event.clientY);
-  document.addEventListener("pointermove", handlePaletteDragMove);
-  document.addEventListener("pointerup", stopPaletteDrag);
-  document.addEventListener("pointercancel", stopPaletteDrag);
+  document.addEventListener("pointermove", handleDragMove);
+  document.addEventListener("pointerup", stopDrag);
+  document.addEventListener("pointercancel", stopDrag);
+}
+
+function startPaletteDrag(event) {
+  const paletteItem = event.currentTarget;
+  startDrag(event, paletteItem, paletteItem.dataset.componentType);
+}
+
+function startPlacedControlDrag(event) {
+  const filledControl = event.target.closest(".slot-filled-button");
+
+  if (!filledControl) {
+    return;
+  }
+
+  const originSlot = filledControl.closest(".drop-slot");
+
+  if (!originSlot) {
+    return;
+  }
+
+  startDrag(event, filledControl, filledControl.dataset.componentType, originSlot);
 }
 
 appShellEl.addEventListener("touchstart", (event) => {
@@ -398,7 +520,10 @@ settingsMenuItemEl.addEventListener("click", () => {
   setMenuOpen(false);
 });
 editLayoutMenuItemEl.addEventListener("click", resetLayoutFlow);
-buttonPaletteItemEl.addEventListener("pointerdown", startPaletteDrag);
+paletteItemEls.forEach((paletteItem) => {
+  paletteItem.addEventListener("pointerdown", startPaletteDrag);
+});
+layoutCanvasEl.addEventListener("pointerdown", startPlacedControlDrag);
 
 layoutOptionEls.forEach((option) => {
   option.addEventListener("click", () => {

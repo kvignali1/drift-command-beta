@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=10" />
+  <link rel="stylesheet" href="/static/css/style.css?v=11" />
 </head>
 <body>
   <div class="app-shell">
@@ -192,11 +192,66 @@
 
             <aside class="component-sidebar">
               <div class="component-sidebar-title">Component Tray</div>
-              <div class="component-sidebar-copy">Drag a small button into any slot to place it.</div>
+              <div class="component-sidebar-copy">Drag controls into a slot. Drag a placed control back here to remove it.</div>
 
-              <div id="button-palette-item" class="palette-item" role="button" tabindex="0">
-                <div class="palette-item-label">Button</div>
-                <div class="palette-item-caption">Drag into layout</div>
+              <div id="component-dropzone" class="component-dropzone">
+                Drop Here To Remove
+              </div>
+
+              <div class="palette-list">
+                <div class="palette-item" role="button" tabindex="0" data-component-type="button" data-component-label="Button">
+                  <div class="palette-item-preview preview-button">
+                    <div class="control-face control-button-face">
+                      <div class="control-button-cap"></div>
+                    </div>
+                  </div>
+                  <div class="palette-item-label">Button</div>
+                  <div class="palette-item-caption">Momentary push</div>
+                </div>
+
+                <div class="palette-item" role="button" tabindex="0" data-component-type="toggle" data-component-label="Toggle">
+                  <div class="palette-item-preview preview-toggle">
+                    <div class="control-face control-toggle-face">
+                      <div class="control-toggle-base"></div>
+                      <div class="control-toggle-lever"></div>
+                    </div>
+                  </div>
+                  <div class="palette-item-label">Toggle</div>
+                  <div class="palette-item-caption">Metal switch</div>
+                </div>
+
+                <div class="palette-item" role="button" tabindex="0" data-component-type="rocker" data-component-label="Rocker">
+                  <div class="palette-item-preview preview-rocker">
+                    <div class="control-face control-rocker-face">
+                      <div class="control-rocker-top">ON</div>
+                      <div class="control-rocker-bottom">OFF</div>
+                    </div>
+                  </div>
+                  <div class="palette-item-label">Rocker</div>
+                  <div class="palette-item-caption">Dash switch</div>
+                </div>
+
+                <div class="palette-item" role="button" tabindex="0" data-component-type="light" data-component-label="Light">
+                  <div class="palette-item-preview preview-light">
+                    <div class="control-face control-light-face">
+                      <div class="control-light-lens"></div>
+                    </div>
+                  </div>
+                  <div class="palette-item-label">Light</div>
+                  <div class="palette-item-caption">Indicator lamp</div>
+                </div>
+
+                <div class="palette-item" role="button" tabindex="0" data-component-type="start" data-component-label="Start">
+                  <div class="palette-item-preview preview-start">
+                    <div class="control-face control-start-face">
+                      <div class="control-start-ring">
+                        <div class="control-start-core">START</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="palette-item-label">Start</div>
+                  <div class="palette-item-caption">Ignition button</div>
+                </div>
               </div>
             </aside>
           </div>
@@ -212,6 +267,6 @@
     <span id="dot-1" class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=10"></script>
+  <script src="/static/js/app.js?v=11"></script>
 </body>
 </html>
