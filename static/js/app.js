@@ -134,25 +134,21 @@ appShellEl.addEventListener("touchcancel", () => {
 });
 
 function toggleMenu(event) {
+  event.preventDefault();
   event.stopPropagation();
   setMenuOpen(menuDropdownEl.hidden);
 }
 
-menuToggleEl.addEventListener("click", toggleMenu);
-menuToggleEl.addEventListener("pointerup", toggleMenu);
-menuToggleEl.addEventListener("touchend", toggleMenu, { passive: true });
+menuToggleEl.addEventListener("pointerdown", toggleMenu);
 
 menuDropdownEl.addEventListener("click", (event) => {
   event.stopPropagation();
 });
 
-menuDropdownEl.addEventListener("pointerup", (event) => {
+menuDropdownEl.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
   event.stopPropagation();
 });
-
-menuDropdownEl.addEventListener("touchend", (event) => {
-  event.stopPropagation();
-}, { passive: true });
 
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".menu-wrap")) {
