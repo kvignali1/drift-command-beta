@@ -88,7 +88,17 @@ function setMenuOpen(isOpen) {
   menuToggleEl.setAttribute("aria-expanded", String(isOpen));
 }
 
+function isMenuEventTarget(target) {
+  return Boolean(target.closest(".menu-wrap"));
+}
+
 appShellEl.addEventListener("touchstart", (event) => {
+  if (isMenuEventTarget(event.target)) {
+    touchStartX = null;
+    touchStartY = null;
+    return;
+  }
+
   touchStartX = event.changedTouches[0].clientX;
   touchStartY = event.changedTouches[0].clientY;
 }, { passive: true });
@@ -123,14 +133,26 @@ appShellEl.addEventListener("touchcancel", () => {
   touchStartY = null;
 });
 
-menuToggleEl.addEventListener("click", (event) => {
+function toggleMenu(event) {
   event.stopPropagation();
   setMenuOpen(menuDropdownEl.hidden);
-});
+}
+
+menuToggleEl.addEventListener("click", toggleMenu);
+menuToggleEl.addEventListener("pointerup", toggleMenu);
+menuToggleEl.addEventListener("touchend", toggleMenu, { passive: true });
 
 menuDropdownEl.addEventListener("click", (event) => {
   event.stopPropagation();
 });
+
+menuDropdownEl.addEventListener("pointerup", (event) => {
+  event.stopPropagation();
+});
+
+menuDropdownEl.addEventListener("touchend", (event) => {
+  event.stopPropagation();
+}, { passive: true });
 
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".menu-wrap")) {
