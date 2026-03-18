@@ -77,7 +77,9 @@ let controlConfigTarget = null;
 
 const layoutTemplates = {
   four: {
-    title: "4 Button Layout",
+    title: "Classic Quad",
+    columns: 2,
+    rows: 2,
     slots: [
       { id: "1" },
       { id: "2" },
@@ -86,7 +88,9 @@ const layoutTemplates = {
     ],
   },
   six: {
-    title: "6 Button Layout",
+    title: "Twin Triple",
+    columns: 2,
+    rows: 3,
     slots: [
       { id: "1" },
       { id: "2" },
@@ -97,14 +101,143 @@ const layoutTemplates = {
     ],
   },
   three: {
-    title: "3 Button Layout",
+    title: "Endurance Split",
+    columns: 2,
+    rows: 2,
     slots: [
-      { id: "1", extraClass: "slot-large" },
+      { id: "1", rowSpan: 2 },
       { id: "2" },
       { id: "3" },
     ],
   },
+  three_row: {
+    title: "Triple Row",
+    columns: 3,
+    rows: 1,
+    slots: [
+      { id: "1" },
+      { id: "2" },
+      { id: "3" },
+    ],
+  },
+  four_console: {
+    title: "Console Sweep",
+    columns: 2,
+    rows: 3,
+    slots: [
+      { id: "1", rowSpan: 2 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4", colSpan: 2 },
+    ],
+  },
+  five_arc: {
+    title: "Command Arc",
+    columns: 4,
+    rows: 2,
+    slots: [
+      { id: "1", colSpan: 2 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4", colSpan: 2 },
+      { id: "5", colSpan: 2 },
+    ],
+  },
+  five_wide: {
+    title: "Wide Top Five",
+    columns: 3,
+    rows: 2,
+    slots: [
+      { id: "1", colSpan: 2 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4" },
+      { id: "5" },
+    ],
+  },
+  six_bridge: {
+    title: "Bridge Six",
+    columns: 3,
+    rows: 3,
+    slots: [
+      { id: "1", colSpan: 3 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4" },
+      { id: "5", colSpan: 2 },
+      { id: "6" },
+    ],
+  },
+  seven_ladder: {
+    title: "Race Ladder",
+    columns: 3,
+    rows: 3,
+    slots: [
+      { id: "1", colSpan: 3 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4" },
+      { id: "5" },
+      { id: "6" },
+      { id: "7" },
+    ],
+  },
+  seven_bridge: {
+    title: "Command Bridge",
+    columns: 4,
+    rows: 3,
+    slots: [
+      { id: "1", colSpan: 2 },
+      { id: "2", colSpan: 2 },
+      { id: "3" },
+      { id: "4" },
+      { id: "5" },
+      { id: "6" },
+      { id: "7", colStart: 2, colSpan: 2 },
+    ],
+  },
+  eight_grid: {
+    title: "Full Grid Eight",
+    columns: 4,
+    rows: 2,
+    slots: [
+      { id: "1" },
+      { id: "2" },
+      { id: "3" },
+      { id: "4" },
+      { id: "5" },
+      { id: "6" },
+      { id: "7" },
+      { id: "8" },
+    ],
+  },
+  eight_tall: {
+    title: "Tall Console Eight",
+    columns: 3,
+    rows: 3,
+    slots: [
+      { id: "1", rowSpan: 2 },
+      { id: "2" },
+      { id: "3" },
+      { id: "4" },
+      { id: "5" },
+      { id: "6" },
+      { id: "7" },
+      { id: "8" },
+    ],
+  },
 };
+
+const orderedLayoutEntries = Object.entries(layoutTemplates)
+  .sort(([, leftTemplate], [, rightTemplate]) => {
+    const slotCountDifference = leftTemplate.slots.length - rightTemplate.slots.length;
+
+    if (slotCountDifference !== 0) {
+      return slotCountDifference;
+    }
+
+    return leftTemplate.title.localeCompare(rightTemplate.title);
+  });
 
 const componentCatalog = {
   button: { label: "Button" },
@@ -361,47 +494,64 @@ function getTelemetryPageMarkup() {
   `;
 }
 
+function getGridContainerStyle(template) {
+  return `grid-template-columns: repeat(${template.columns}, minmax(0, 1fr)); grid-template-rows: repeat(${template.rows}, minmax(0, 1fr));`;
+}
+
+function getGridSlotStyle(slot) {
+  const styles = [];
+
+  if (slot.colStart && slot.colSpan) {
+    styles.push(`grid-column: ${slot.colStart} / span ${slot.colSpan};`);
+  } else if (slot.colStart) {
+    styles.push(`grid-column-start: ${slot.colStart};`);
+  } else if (slot.colSpan) {
+    styles.push(`grid-column: span ${slot.colSpan};`);
+  }
+
+  if (slot.rowStart && slot.rowSpan) {
+    styles.push(`grid-row: ${slot.rowStart} / span ${slot.rowSpan};`);
+  } else if (slot.rowStart) {
+    styles.push(`grid-row-start: ${slot.rowStart};`);
+  } else if (slot.rowSpan) {
+    styles.push(`grid-row: span ${slot.rowSpan};`);
+  }
+
+  return styles.join(" ");
+}
+
 function getLayoutPickerMarkup() {
-  return `
-    <div class="layout-picker hidden">
-      <button class="layout-option" type="button" data-layout="four">
-        <div class="layout-option-title">4 Button Layout</div>
-        <div class="layout-option-preview preview-four">
-          <span class="layout-slot"></span>
-          <span class="layout-slot"></span>
-          <span class="layout-slot"></span>
-          <span class="layout-slot"></span>
-        </div>
-      </button>
+  const groupedLayouts = orderedLayoutEntries.reduce((groups, [layoutKey, template]) => {
+    const buttonCount = template.slots.length;
 
-      <button class="layout-option" type="button" data-layout="six">
-        <div class="layout-option-title">6 Button Layout</div>
-        <div class="layout-option-preview preview-six">
-          <div class="preview-column">
-            <span class="layout-slot"></span>
-            <span class="layout-slot"></span>
-            <span class="layout-slot"></span>
-          </div>
-          <div class="preview-column">
-            <span class="layout-slot"></span>
-            <span class="layout-slot"></span>
-            <span class="layout-slot"></span>
-          </div>
-        </div>
-      </button>
+    if (!groups[buttonCount]) {
+      groups[buttonCount] = [];
+    }
 
-      <button class="layout-option" type="button" data-layout="three">
-        <div class="layout-option-title">3 Button Layout</div>
-        <div class="layout-option-preview preview-three">
-          <span class="layout-slot preview-large"></span>
-          <div class="preview-column">
-            <span class="layout-slot"></span>
-            <span class="layout-slot"></span>
-          </div>
-        </div>
-      </button>
-    </div>
-  `;
+    groups[buttonCount].push([layoutKey, template]);
+    return groups;
+  }, {});
+
+  const categoryMarkup = Object.entries(groupedLayouts).map(([buttonCount, layouts]) => `
+    <section class="layout-category">
+      <div class="layout-category-title">${buttonCount} Buttons</div>
+      <div class="layout-category-grid">
+        ${layouts.map(([layoutKey, template]) => `
+          <button class="layout-option" type="button" data-layout="${layoutKey}">
+            <div class="layout-option-title">${template.title}</div>
+            <div class="layout-option-count">${buttonCount} control positions</div>
+            <div class="layout-option-preview layout-preview-grid" style="${getGridContainerStyle(template)}">
+              ${template.slots.map((slot) => `
+                <span class="layout-slot" style="${getGridSlotStyle(slot)}"></span>
+              `).join("")}
+            </div>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `).join("");
+
+  return `<div class="layout-picker hidden">${categoryMarkup}</div>`;
 }
 
 function getPaletteMarkup() {
@@ -1031,10 +1181,11 @@ function renderLayoutCanvas(page) {
     return;
   }
 
-  refs.layoutCanvasEl.className = `layout-canvas canvas-${state.selectedLayout}`;
+  refs.layoutCanvasEl.className = "layout-canvas";
+  refs.layoutCanvasEl.style.cssText = getGridContainerStyle(template);
   refs.layoutCanvasEl.innerHTML = template.slots.map((slot) => {
-    const extraClass = slot.extraClass ? ` ${slot.extraClass}` : "";
     const componentType = state.placedComponents[slot.id];
+    const slotStyle = getGridSlotStyle(slot);
 
     if (componentType) {
       const isActive = Boolean(state.componentStates[slot.id]);
@@ -1042,7 +1193,7 @@ function renderLayoutCanvas(page) {
       const componentConfig = getComponentConfig(page, slot.id, componentType);
       const controlLabel = getControlLabel(page, slot.id, componentType);
       return `
-        <div class="drop-slot filled${extraClass}" data-slot-id="${slot.id}">
+        <div class="drop-slot filled" data-slot-id="${slot.id}" style="${slotStyle}">
           ${getSlotControlMarkup(componentType, slot.id, isActive, {
             orientation: componentSettings.orientation,
             showRotateButton: state.mode === "builder" && componentType === "toggle",
@@ -1055,7 +1206,7 @@ function renderLayoutCanvas(page) {
     }
 
     const modeClass = state.mode === "live" ? " view-only" : "";
-    return `<div class="drop-slot${extraClass}${modeClass}" data-slot-id="${slot.id}"></div>`;
+    return `<div class="drop-slot${modeClass}" data-slot-id="${slot.id}" style="${slotStyle}"></div>`;
   }).join("");
 }
 
