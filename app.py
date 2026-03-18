@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import time
 
 app = Flask(__name__)
@@ -24,6 +24,13 @@ def telemetry():
         "rpm_max": 9000,
         "shift_light_threshold": 7000
     })
+
+
+@app.route("/api/control-event", methods=["POST"])
+def control_event():
+    payload = request.get_json(silent=True) or {}
+    print(f"[control-event] {payload}", flush=True)
+    return jsonify({"ok": True, "received": payload})
 
 
 if __name__ == "__main__":

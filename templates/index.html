@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=15" />
+  <link rel="stylesheet" href="/static/css/style.css?v=27" />
 </head>
 <body>
   <div class="app-shell">
@@ -22,6 +22,66 @@
     </div>
   </div>
 
+  <div id="control-config-modal" class="confirm-modal hidden">
+    <div class="confirm-dialog control-config-dialog">
+      <div id="control-config-title" class="confirm-title">Edit Control</div>
+      <div id="control-config-copy" class="confirm-copy">Name this control and define what it should output when used.</div>
+
+      <div class="control-config-fields">
+        <label class="config-field">
+          <span class="config-label">Display Name</span>
+          <input id="control-config-name" class="config-input" type="text" placeholder="Starter, Fan, Pit Limiter" />
+        </label>
+
+        <label id="control-config-button-mode-field" class="config-field hidden">
+          <span class="config-label">Button Mode</span>
+          <select id="control-config-button-mode" class="config-input">
+            <option value="momentary">Momentary</option>
+            <option value="latched">Click / Latched</option>
+          </select>
+        </label>
+
+        <label id="control-config-color-field" class="config-field hidden">
+          <span class="config-label">Button Color</span>
+          <select id="control-config-color" class="config-input">
+            <option value="red">Red</option>
+            <option value="amber">Amber</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="white">White</option>
+          </select>
+        </label>
+
+        <label id="control-config-press-field" class="config-field">
+          <span class="config-label">Pressed Output</span>
+          <input id="control-config-output-press" class="config-input" type="text" placeholder="BTN:13" />
+        </label>
+
+        <label id="control-config-release-field" class="config-field">
+          <span class="config-label">Released Output</span>
+          <input id="control-config-output-release" class="config-input" type="text" placeholder="BTN:13:UP" />
+        </label>
+
+        <label id="control-config-on-field" class="config-field">
+          <span class="config-label">On Output</span>
+          <input id="control-config-output-on" class="config-input" type="text" placeholder="SW:IGNITION:ON" />
+        </label>
+
+        <label id="control-config-off-field" class="config-field">
+          <span class="config-label">Off Output</span>
+          <input id="control-config-output-off" class="config-input" type="text" placeholder="SW:IGNITION:OFF" />
+        </label>
+      </div>
+
+      <div class="config-help">Examples: BTN:13, BTN:13:UP, SW:LIGHTS:ON, SW:LIGHTS:OFF</div>
+
+      <div class="confirm-actions">
+        <button id="control-config-save" class="confirm-button confirm-button-danger" type="button">Save</button>
+        <button id="control-config-cancel" class="confirm-button" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="page-dots" aria-hidden="true">
     <span class="page-dot active"></span>
     <span class="page-dot"></span>
@@ -30,6 +90,6 @@
     <span class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=15"></script>
+  <script src="/static/js/app.js?v=27"></script>
 </body>
 </html>

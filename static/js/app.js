@@ -3,16 +3,77 @@ const pageDots = Array.from(document.querySelectorAll(".page-dot"));
 const deleteConfirmModalEl = document.getElementById("delete-confirm-modal");
 const confirmDeleteYesEl = document.getElementById("confirm-delete-yes");
 const confirmDeleteNoEl = document.getElementById("confirm-delete-no");
+const controlConfigModalEl = document.getElementById("control-config-modal");
+const controlConfigTitleEl = document.getElementById("control-config-title");
+const controlConfigCopyEl = document.getElementById("control-config-copy");
+const controlConfigNameEl = document.getElementById("control-config-name");
+const controlConfigButtonModeFieldEl = document.getElementById("control-config-button-mode-field");
+const controlConfigButtonModeEl = document.getElementById("control-config-button-mode");
+const controlConfigColorFieldEl = document.getElementById("control-config-color-field");
+const controlConfigColorEl = document.getElementById("control-config-color");
+const controlConfigPressFieldEl = document.getElementById("control-config-press-field");
+const controlConfigReleaseFieldEl = document.getElementById("control-config-release-field");
+const controlConfigOnFieldEl = document.getElementById("control-config-on-field");
+const controlConfigOffFieldEl = document.getElementById("control-config-off-field");
+const controlConfigOutputPressEl = document.getElementById("control-config-output-press");
+const controlConfigOutputReleaseEl = document.getElementById("control-config-output-release");
+const controlConfigOutputOnEl = document.getElementById("control-config-output-on");
+const controlConfigOutputOffEl = document.getElementById("control-config-output-off");
+const controlConfigSaveEl = document.getElementById("control-config-save");
+const controlConfigCancelEl = document.getElementById("control-config-cancel");
 const appShellEl = document.querySelector(".app-shell");
 
 const TOTAL_LAYOUT_PAGES = 4;
+const TOTAL_TELEMETRY_PAGES = 3;
+const LAYOUT_STORAGE_KEY = "drift-command-layout-state-v1";
+const BUTTON_LED_THEMES = {
+  red: {
+    bright: "#ffb3b7",
+    base: "#d8202d",
+    shadow: "#7a0d16",
+    glow: "rgba(216, 32, 45, 0.52)",
+    soft: "rgba(216, 32, 45, 0.22)",
+  },
+  amber: {
+    bright: "#ffe3a0",
+    base: "#ff9f1f",
+    shadow: "#7a4200",
+    glow: "rgba(255, 159, 31, 0.52)",
+    soft: "rgba(255, 159, 31, 0.2)",
+  },
+  green: {
+    bright: "#d9ffbf",
+    base: "#56d34d",
+    shadow: "#1d6319",
+    glow: "rgba(86, 211, 77, 0.5)",
+    soft: "rgba(86, 211, 77, 0.2)",
+  },
+  blue: {
+    bright: "#c3ecff",
+    base: "#29a3ff",
+    shadow: "#0f4579",
+    glow: "rgba(41, 163, 255, 0.5)",
+    soft: "rgba(41, 163, 255, 0.2)",
+  },
+  white: {
+    bright: "#ffffff",
+    base: "#d8e1ec",
+    shadow: "#6b7480",
+    glow: "rgba(226, 235, 245, 0.5)",
+    soft: "rgba(226, 235, 245, 0.22)",
+  },
+};
 
 let currentPage = 0;
+let currentTelemetryPage = 0;
 let touchStartX = null;
 let touchStartY = null;
+let pointerSwipe = null;
 let activeDrag = null;
 let deleteTargetPage = null;
 let pressedLiveControl = null;
+let liveToggleGesture = null;
+let controlConfigTarget = null;
 
 const layoutTemplates = {
   four: {
@@ -55,106 +116,246 @@ const componentCatalog = {
 
 function getTelemetryPageMarkup() {
   return `
-    <section class="page">
+    <section class="page telemetry-page">
       <div class="dashboard telemetry-dashboard">
-        <div class="telemetry-shell">
-          <div class="telemetry-topbar">
-            <div class="telemetry-mark">
-              <div class="brand">DRIFT COMMAND</div>
-              <div class="subbrand">Performance telemetry interface</div>
-            </div>
-            <div class="telemetry-status-pill">
-              <span class="status-dot"></span>
-              Live Telemetry
-            </div>
+        <div class="telemetry-page-shell">
+          <div class="telemetry-vertical-rail">
+            <span class="telemetry-dot active"></span>
+            <span class="telemetry-dot"></span>
+            <span class="telemetry-dot"></span>
           </div>
 
-          <div class="telemetry-hud">
-            <div class="telemetry-side">
-              <div class="telemetry-card gear-panel">
-                <div class="telemetry-label">Gear</div>
-                <div id="gear" class="gear-value">N</div>
-                <div id="drive-state" class="telemetry-note">Standby</div>
-              </div>
-
-              <div class="telemetry-card">
-                <div class="telemetry-label">Shift Point</div>
-                <div id="shift-threshold" class="telemetry-metric">7000</div>
-                <div class="telemetry-note">RPM target</div>
-              </div>
-            </div>
-
-            <div class="telemetry-center">
-              <div class="rpm-ring-shell">
-                <div id="rpm-ring" class="rpm-ring">
-                  <div class="rpm-ring-core">
-                    <div class="telemetry-label">Engine Speed</div>
-                    <div class="rpm-readout">
-                      <span id="rpm-text">0</span>
-                      <span class="rpm-unit">RPM</span>
-                    </div>
-                    <div class="rpm-maxline">MAX <span id="rpm-max">9000</span></div>
+          <div id="telemetry-track" class="telemetry-page-track">
+            <section class="telemetry-screen telemetry-screen-vintage">
+              <div class="telemetry-shell telemetry-shell-vintage">
+                <div class="telemetry-topbar">
+                  <div class="telemetry-mark">
+                    <div class="brand">DRIFT COMMAND</div>
+                    <div class="subbrand">Analog night run</div>
+                  </div>
+                  <div class="telemetry-status-pill">
+                    <span class="status-dot"></span>
+                    Vintage Cluster
                   </div>
                 </div>
-              </div>
 
-              <div class="telemetry-bandline">
-                <div id="power-band" class="band-chip">Idle</div>
-                <div id="rpm-percent" class="band-percent">0%</div>
-              </div>
+                <div class="analog-cluster">
+                  <article class="hero-gauge tach-gauge">
+                    <div class="gauge-title">Tachometer</div>
+                    <div class="needle-gauge">
+                      <div class="needle-dial"></div>
+                      <div class="needle-arc"></div>
+                      <div class="needle-pivot"></div>
+                      <div class="needle" data-role="tach-needle"></div>
+                      <div class="needle-readout">
+                        <div class="needle-number" data-role="rpm">0</div>
+                        <div class="needle-unit">RPM</div>
+                      </div>
+                    </div>
+                    <div class="telemetry-note" data-role="shift-status">Build RPM</div>
+                  </article>
 
-              <div class="rpm-bar-outer">
-                <div id="rpm-bar" class="rpm-bar-inner"></div>
-              </div>
+                  <div class="analog-side-grid">
+                    <article class="mini-gauge-card">
+                      <div class="gauge-title">Boost</div>
+                      <div class="mini-gauge-face">
+                        <div class="mini-gauge-value"><span data-role="boost">0.0</span><span class="mini-unit">psi</span></div>
+                      </div>
+                    </article>
+                    <article class="mini-gauge-card">
+                      <div class="gauge-title">Voltage</div>
+                      <div class="mini-gauge-face">
+                        <div class="mini-gauge-value"><span data-role="voltage">12.8</span><span class="mini-unit">v</span></div>
+                      </div>
+                    </article>
+                    <article class="mini-gauge-card">
+                      <div class="gauge-title">Oil Temp</div>
+                      <div class="mini-gauge-face">
+                        <div class="mini-gauge-value"><span data-role="oil-temp">180</span><span class="mini-unit">F</span></div>
+                      </div>
+                    </article>
+                    <article class="mini-gauge-card">
+                      <div class="gauge-title">Water Temp</div>
+                      <div class="mini-gauge-face">
+                        <div class="mini-gauge-value"><span data-role="water-temp">176</span><span class="mini-unit">F</span></div>
+                      </div>
+                    </article>
+                    <article class="mini-gauge-card">
+                      <div class="gauge-title">Oil Pressure</div>
+                      <div class="mini-gauge-face">
+                        <div class="mini-gauge-value"><span data-role="oil-pressure">48</span><span class="mini-unit">psi</span></div>
+                      </div>
+                    </article>
+                    <article class="mini-gauge-card gear-card-analog">
+                      <div class="gauge-title">Gear</div>
+                      <div class="mini-gauge-face mini-gauge-face-gear">
+                        <div class="mini-gauge-gear" data-role="gear">N</div>
+                        <div class="telemetry-note" data-role="drive-state">Standby</div>
+                      </div>
+                    </article>
+                  </div>
+                </div>
 
-              <div id="shift-lights" class="shift-lights">
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
-                <div class="light"></div>
+                <div class="telemetry-hint-strip">Swipe up for Pro Drift view or left for Layout 1</div>
               </div>
-            </div>
+            </section>
 
-            <div class="telemetry-side">
-              <div class="telemetry-card">
-                <div class="telemetry-label">Shift Status</div>
-                <div id="shift-status" class="telemetry-metric">Build RPM</div>
-                <div class="telemetry-note">Climb into the band</div>
+            <section class="telemetry-screen telemetry-screen-drift">
+              <div class="telemetry-shell telemetry-shell-drift">
+                <div class="telemetry-topbar">
+                  <div class="telemetry-mark">
+                    <div class="brand">DRIFT COMMAND // ATTACK</div>
+                    <div class="subbrand">Pro drift chase display</div>
+                  </div>
+                  <div class="telemetry-status-pill">
+                    <span class="status-dot"></span>
+                    Clipping Zone Live
+                  </div>
+                </div>
+
+                <div class="drift-hero-grid">
+                  <article class="drift-main-card">
+                    <div class="telemetry-label">Engine Speed</div>
+                    <div class="drift-rpm-number"><span data-role="rpm">0</span> <span class="rpm-unit">RPM</span></div>
+                    <div class="drift-rpm-bar-outer">
+                      <div class="drift-rpm-bar-inner" data-role="rpm-bar"></div>
+                    </div>
+                    <div class="drift-bandline">
+                      <div class="band-chip" data-role="band-name">Idle</div>
+                      <div class="band-percent" data-role="rpm-percent">0%</div>
+                    </div>
+                    <div class="shift-lights drift-shift-lights" data-role="shift-lights">
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                      <div class="light"></div>
+                    </div>
+                  </article>
+
+                  <aside class="drift-side-stack">
+                    <article class="drift-side-card drift-side-card-gear">
+                      <div class="telemetry-label">Current Gear</div>
+                      <div class="drift-gear" data-role="gear">N</div>
+                      <div class="telemetry-note" data-role="drive-state">Standby</div>
+                    </article>
+                    <article class="drift-side-card">
+                      <div class="telemetry-label">Boost</div>
+                      <div class="telemetry-metric"><span data-role="boost">0.0</span> psi</div>
+                    </article>
+                    <article class="drift-side-card">
+                      <div class="telemetry-label">Voltage</div>
+                      <div class="telemetry-metric"><span data-role="voltage">12.8</span> v</div>
+                    </article>
+                  </aside>
+                </div>
+
+                <div class="telemetry-grid telemetry-grid-drift">
+                  <div class="metric-tile">
+                    <div class="telemetry-label">Oil Temp</div>
+                    <div class="grid-metric"><span data-role="oil-temp">180</span>F</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="telemetry-label">Water Temp</div>
+                    <div class="grid-metric"><span data-role="water-temp">176</span>F</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="telemetry-label">Oil Pressure</div>
+                    <div class="grid-metric"><span data-role="oil-pressure">48</span> psi</div>
+                  </div>
+                  <div class="metric-tile">
+                    <div class="telemetry-label">Shift Call</div>
+                    <div class="grid-metric" data-role="shift-status">Build RPM</div>
+                  </div>
+                </div>
+
+                <div class="telemetry-hint-strip">Swipe up for Endurance view or down for Vintage</div>
               </div>
+            </section>
 
-              <div class="telemetry-card">
-                <div class="telemetry-label">Headroom</div>
-                <div id="headroom-value" class="telemetry-metric">9000</div>
-                <div class="telemetry-note">RPM remaining</div>
+            <section class="telemetry-screen telemetry-screen-endurance">
+              <div class="telemetry-shell telemetry-shell-endurance">
+                <div class="telemetry-topbar">
+                  <div class="telemetry-mark">
+                    <div class="brand">DRIFT COMMAND // ENDURANCE</div>
+                    <div class="subbrand">Le Mans inspired systems page</div>
+                  </div>
+                  <div class="telemetry-status-pill">
+                    <span class="status-dot"></span>
+                    Race Systems Armed
+                  </div>
+                </div>
+
+                <div class="endurance-grid">
+                  <article class="endurance-main">
+                    <div class="endurance-rpm-panel">
+                      <div class="telemetry-label">Power Unit</div>
+                      <div class="endurance-rpm-number"><span data-role="rpm">0</span></div>
+                      <div class="endurance-rpm-copy">RPM</div>
+                      <div class="endurance-ring" data-role="rpm-ring">
+                        <div class="endurance-ring-core">
+                          <div class="endurance-gear" data-role="gear">N</div>
+                          <div class="telemetry-note" data-role="drive-state">Standby</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="endurance-status-row">
+                      <div class="endurance-status-card">
+                        <div class="telemetry-label">DNS</div>
+                        <div class="grid-metric" data-role="dns-status">READY</div>
+                      </div>
+                      <div class="endurance-status-card">
+                        <div class="telemetry-label">Diff Lock</div>
+                        <div class="grid-metric" data-role="diff-lock">AUTO</div>
+                      </div>
+                      <div class="endurance-status-card">
+                        <div class="telemetry-label">Shift Window</div>
+                        <div class="grid-metric" data-role="window-value">7000-9000</div>
+                      </div>
+                    </div>
+                  </article>
+
+                  <aside class="endurance-side">
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Boost</div>
+                      <div class="grid-metric"><span data-role="boost">0.0</span> psi</div>
+                    </div>
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Voltage</div>
+                      <div class="grid-metric"><span data-role="voltage">12.8</span> v</div>
+                    </div>
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Oil Temp</div>
+                      <div class="grid-metric"><span data-role="oil-temp">180</span>F</div>
+                    </div>
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Water Temp</div>
+                      <div class="grid-metric"><span data-role="water-temp">176</span>F</div>
+                    </div>
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Oil Pressure</div>
+                      <div class="grid-metric"><span data-role="oil-pressure">48</span> psi</div>
+                    </div>
+                    <div class="endurance-metric-card">
+                      <div class="telemetry-label">Brake Bias</div>
+                      <div class="grid-metric" data-role="brake-bias">58F</div>
+                    </div>
+                  </aside>
+                </div>
+
+                <div class="endurance-footer-strip">
+                  <div class="band-chip" data-role="band-name">Idle</div>
+                  <div class="band-percent" data-role="rpm-percent">0%</div>
+                  <div class="telemetry-note" data-role="shift-status">Build RPM</div>
+                </div>
+                <div class="telemetry-hint-strip">Swipe down for Pro Drift view or left for Layout 1</div>
               </div>
-            </div>
-          </div>
-
-          <div class="telemetry-grid">
-            <div class="metric-tile">
-              <div class="telemetry-label">Engine Load</div>
-              <div id="load-value" class="grid-metric">0%</div>
-            </div>
-            <div class="metric-tile">
-              <div class="telemetry-label">Power Band</div>
-              <div id="band-value" class="grid-metric">Idle</div>
-            </div>
-            <div class="metric-tile">
-              <div class="telemetry-label">Target</div>
-              <div id="target-value" class="grid-metric">7000</div>
-            </div>
-            <div class="metric-tile">
-              <div class="telemetry-label">Working Window</div>
-              <div id="window-value" class="grid-metric">7000-9000</div>
-            </div>
+            </section>
           </div>
         </div>
-
-        <div class="swipe-hint">Swipe left for layout 1</div>
       </div>
     </section>
   `;
@@ -331,6 +532,17 @@ function getLayoutPageMarkup(layoutPageIndex) {
           </aside>
         </div>
 
+        <section class="debug-drawer hidden">
+          <button class="debug-drawer-toggle" type="button" aria-expanded="false">Show Debug</button>
+          <div class="debug-drawer-panel hidden">
+            <div class="output-monitor-label">Switch Event Debug</div>
+            <div class="output-monitor-value">Nothing sent yet.</div>
+            <div class="debug-log-list">
+              <div class="debug-log-empty">No events yet.</div>
+            </div>
+          </div>
+        </section>
+
         <div class="swipe-hint">Swipe right for ${previousHint}${nextHint}</div>
       </div>
     </section>
@@ -343,22 +555,27 @@ pageTrackEl.innerHTML = getTelemetryPageMarkup() + Array.from(
 ).join("");
 
 const telemetryRefs = {
-  gearEl: document.getElementById("gear"),
-  rpmTextEl: document.getElementById("rpm-text"),
-  rpmMaxEl: document.getElementById("rpm-max"),
-  rpmBarEl: document.getElementById("rpm-bar"),
-  rpmRingEl: document.getElementById("rpm-ring"),
-  rpmPercentEl: document.getElementById("rpm-percent"),
-  driveStateEl: document.getElementById("drive-state"),
-  shiftThresholdEl: document.getElementById("shift-threshold"),
-  shiftStatusEl: document.getElementById("shift-status"),
-  headroomValueEl: document.getElementById("headroom-value"),
-  loadValueEl: document.getElementById("load-value"),
-  bandValueEl: document.getElementById("band-value"),
-  targetValueEl: document.getElementById("target-value"),
-  windowValueEl: document.getElementById("window-value"),
-  powerBandEl: document.getElementById("power-band"),
-  lights: document.querySelectorAll("#shift-lights .light"),
+  trackEl: document.getElementById("telemetry-track"),
+  dots: Array.from(document.querySelectorAll(".telemetry-dot")),
+  rpmEls: document.querySelectorAll('[data-role="rpm"]'),
+  gearEls: document.querySelectorAll('[data-role="gear"]'),
+  driveStateEls: document.querySelectorAll('[data-role="drive-state"]'),
+  shiftStatusEls: document.querySelectorAll('[data-role="shift-status"]'),
+  bandNameEls: document.querySelectorAll('[data-role="band-name"]'),
+  rpmPercentEls: document.querySelectorAll('[data-role="rpm-percent"]'),
+  windowValueEls: document.querySelectorAll('[data-role="window-value"]'),
+  boostEls: document.querySelectorAll('[data-role="boost"]'),
+  voltageEls: document.querySelectorAll('[data-role="voltage"]'),
+  oilTempEls: document.querySelectorAll('[data-role="oil-temp"]'),
+  waterTempEls: document.querySelectorAll('[data-role="water-temp"]'),
+  oilPressureEls: document.querySelectorAll('[data-role="oil-pressure"]'),
+  dnsStatusEls: document.querySelectorAll('[data-role="dns-status"]'),
+  diffLockEls: document.querySelectorAll('[data-role="diff-lock"]'),
+  brakeBiasEls: document.querySelectorAll('[data-role="brake-bias"]'),
+  tachNeedleEls: document.querySelectorAll('[data-role="tach-needle"]'),
+  driftRpmBarEls: document.querySelectorAll('[data-role="rpm-bar"]'),
+  enduranceRingEls: document.querySelectorAll('[data-role="rpm-ring"]'),
+  shiftLightGroups: Array.from(document.querySelectorAll('[data-role="shift-lights"]')).map((group) => group.querySelectorAll(".light")),
 };
 
 const layoutPages = Array.from(document.querySelectorAll(".button-box-page")).map((pageEl, index) => ({
@@ -368,6 +585,12 @@ const layoutPages = Array.from(document.querySelectorAll(".button-box-page")).ma
     mode: "start",
     selectedLayout: null,
     placedComponents: {},
+    componentStates: {},
+    componentSettings: {},
+    componentConfigs: {},
+    lastOutput: "Nothing sent yet.",
+    eventLog: [],
+    debugPanelOpen: false,
   },
   refs: {
     menuToggleEl: pageEl.querySelector(".menu-toggle"),
@@ -385,8 +608,15 @@ const layoutPages = Array.from(document.querySelectorAll(".button-box-page")).ma
     paletteItemEls: pageEl.querySelectorAll(".palette-item"),
     componentDropzoneEl: pageEl.querySelector(".component-dropzone"),
     finalizeLayoutButtonEl: pageEl.querySelector(".finalize-layout-button"),
+    outputMonitorEl: pageEl.querySelector(".debug-drawer"),
+    outputMonitorValueEl: pageEl.querySelector(".output-monitor-value"),
+    debugDrawerToggleEl: pageEl.querySelector(".debug-drawer-toggle"),
+    debugDrawerPanelEl: pageEl.querySelector(".debug-drawer-panel"),
+    debugLogListEl: pageEl.querySelector(".debug-log-list"),
   },
 }));
+
+loadSavedLayoutState();
 
 function getBandName(rpm, shiftThreshold, rpmMax) {
   if (rpm < 1800) {
@@ -424,6 +654,36 @@ function getShiftStatus(rpm, shiftThreshold, rpmMax) {
   return "Build RPM";
 }
 
+function setTextContent(elements, value) {
+  elements.forEach((element) => {
+    element.textContent = value;
+  });
+}
+
+function getAuxTelemetryMetrics(rpmPercent, gear, bandName) {
+  const t = performance.now() / 1000;
+  const boost = (rpmPercent / 100) * 23 + Math.sin(t * 1.2) * 0.8;
+  const voltage = 12.6 + (rpmPercent / 100) * 1.2 + Math.sin(t * 0.7) * 0.1;
+  const oilTemp = 174 + rpmPercent * 0.44 + Math.sin(t * 0.5) * 2;
+  const waterTemp = 168 + rpmPercent * 0.34 + Math.cos(t * 0.45) * 2;
+  const oilPressure = 22 + rpmPercent * 0.56 + Math.sin(t * 0.85) * 1.4;
+  const dnsStatus = rpmPercent > 80 ? "ATTACK" : rpmPercent > 45 ? "ARMED" : "READY";
+  const diffLock = gear === "N" ? "OPEN" : rpmPercent > 72 ? "LOCK" : "AUTO";
+  const brakeBias = `${Math.round(56 + (rpmPercent / 100) * 4)}F`;
+
+  return {
+    boost: boost.toFixed(1),
+    voltage: voltage.toFixed(1),
+    oilTemp: Math.round(oilTemp),
+    waterTemp: Math.round(waterTemp),
+    oilPressure: Math.round(oilPressure),
+    dnsStatus,
+    diffLock,
+    brakeBias,
+    bandName,
+  };
+}
+
 function updateDashboard(data) {
   const gear = data.gear ?? "N";
   const rpm = data.rpm ?? 0;
@@ -434,42 +694,57 @@ function updateDashboard(data) {
   const headroom = Math.max(0, rpmMax - rpm);
   const bandName = getBandName(rpm, shiftThreshold, rpmMax);
   const shiftStatus = getShiftStatus(rpm, shiftThreshold, rpmMax);
-  const rpmAngle = `${Math.max(18, rpmPercent * 2.8)}deg`;
+  const rpmAngle = `${Math.max(-130, -130 + rpmPercent * 2.6)}deg`;
+  const auxMetrics = getAuxTelemetryMetrics(rpmPercent, gear, bandName);
 
-  telemetryRefs.gearEl.textContent = gear;
-  telemetryRefs.rpmTextEl.textContent = rpm;
-  telemetryRefs.rpmMaxEl.textContent = rpmMax;
-  telemetryRefs.rpmBarEl.style.width = `${rpmPercent}%`;
-  telemetryRefs.rpmRingEl.style.setProperty("--rpm-progress-angle", rpmAngle);
-  telemetryRefs.rpmPercentEl.textContent = `${roundedRpmPercent}%`;
-  telemetryRefs.driveStateEl.textContent = gear === "N" ? "Standby" : `Gear ${gear} engaged`;
-  telemetryRefs.shiftThresholdEl.textContent = shiftThreshold;
-  telemetryRefs.shiftStatusEl.textContent = shiftStatus;
-  telemetryRefs.headroomValueEl.textContent = headroom;
-  telemetryRefs.loadValueEl.textContent = `${roundedRpmPercent}%`;
-  telemetryRefs.bandValueEl.textContent = bandName;
-  telemetryRefs.targetValueEl.textContent = shiftThreshold;
-  telemetryRefs.windowValueEl.textContent = `${shiftThreshold}-${rpmMax}`;
-  telemetryRefs.powerBandEl.textContent = bandName;
+  setTextContent(telemetryRefs.gearEls, gear);
+  setTextContent(telemetryRefs.rpmEls, rpm);
+  setTextContent(telemetryRefs.driveStateEls, gear === "N" ? "Standby" : `Gear ${gear} engaged`);
+  setTextContent(telemetryRefs.shiftStatusEls, shiftStatus);
+  setTextContent(telemetryRefs.bandNameEls, bandName);
+  setTextContent(telemetryRefs.rpmPercentEls, `${roundedRpmPercent}%`);
+  setTextContent(telemetryRefs.windowValueEls, `${shiftThreshold}-${rpmMax}`);
+  setTextContent(telemetryRefs.boostEls, auxMetrics.boost);
+  setTextContent(telemetryRefs.voltageEls, auxMetrics.voltage);
+  setTextContent(telemetryRefs.oilTempEls, auxMetrics.oilTemp);
+  setTextContent(telemetryRefs.waterTempEls, auxMetrics.waterTemp);
+  setTextContent(telemetryRefs.oilPressureEls, auxMetrics.oilPressure);
+  setTextContent(telemetryRefs.dnsStatusEls, auxMetrics.dnsStatus);
+  setTextContent(telemetryRefs.diffLockEls, auxMetrics.diffLock);
+  setTextContent(telemetryRefs.brakeBiasEls, auxMetrics.brakeBias);
 
-  telemetryRefs.lights.forEach((light) => {
-    light.className = "light";
+  telemetryRefs.tachNeedleEls.forEach((needle) => {
+    needle.style.setProperty("--needle-angle", rpmAngle);
   });
 
-  const activeLights = Math.floor((rpmPercent / 100) * telemetryRefs.lights.length);
+  telemetryRefs.driftRpmBarEls.forEach((bar) => {
+    bar.style.width = `${rpmPercent}%`;
+  });
 
-  telemetryRefs.lights.forEach((light, index) => {
-    if (index < activeLights) {
-      light.classList.add("active");
+  telemetryRefs.enduranceRingEls.forEach((ring) => {
+    ring.style.setProperty("--rpm-progress-angle", `${Math.max(18, rpmPercent * 2.8)}deg`);
+  });
 
-      if (index < 4) {
-        light.classList.add("green");
-      } else if (index < 6) {
-        light.classList.add("yellow");
-      } else {
-        light.classList.add("red");
+  telemetryRefs.shiftLightGroups.forEach((lights) => {
+    lights.forEach((light) => {
+      light.className = "light";
+    });
+
+    const activeLights = Math.floor((rpmPercent / 100) * lights.length);
+
+    lights.forEach((light, index) => {
+      if (index < activeLights) {
+        light.classList.add("active");
+
+        if (index < 4) {
+          light.classList.add("green");
+        } else if (index < 6) {
+          light.classList.add("yellow");
+        } else {
+          light.classList.add("red");
+        }
       }
-    }
+    });
   });
 }
 
@@ -492,6 +767,15 @@ function setPage(pageIndex) {
   });
 }
 
+function setTelemetryPage(pageIndex) {
+  currentTelemetryPage = Math.max(0, Math.min(TOTAL_TELEMETRY_PAGES - 1, pageIndex));
+  telemetryRefs.trackEl.style.transform = `translateY(-${currentTelemetryPage * 100}%)`;
+
+  telemetryRefs.dots.forEach((dot, index) => {
+    dot.classList.toggle("active", index === currentTelemetryPage);
+  });
+}
+
 function handleSwipe(deltaX) {
   if (Math.abs(deltaX) < 50) {
     return;
@@ -501,6 +785,18 @@ function handleSwipe(deltaX) {
     setPage(currentPage + 1);
   } else {
     setPage(currentPage - 1);
+  }
+}
+
+function handleTelemetrySwipe(deltaY) {
+  if (Math.abs(deltaY) < 50) {
+    return;
+  }
+
+  if (deltaY < 0) {
+    setTelemetryPage(currentTelemetryPage + 1);
+  } else {
+    setTelemetryPage(currentTelemetryPage - 1);
   }
 }
 
@@ -570,15 +866,158 @@ function getControlVisualMarkup(componentType) {
   }
 }
 
-function getSlotControlMarkup(componentType) {
+function getComponentSettings(page, slotId, componentType) {
+  const savedSettings = page.state.componentSettings[slotId] ?? {};
+
+  if (componentType === "toggle") {
+    return {
+      orientation: savedSettings.orientation === "horizontal" ? "horizontal" : "vertical",
+    };
+  }
+
+  return savedSettings;
+}
+
+function getComponentConfig(page, slotId, componentType) {
+  const savedConfig = page.state.componentConfigs[slotId] ?? {};
+
+  return {
+    name: savedConfig.name ?? "",
+    outputPress: savedConfig.outputPress ?? "",
+    outputRelease: savedConfig.outputRelease ?? "",
+    outputOn: savedConfig.outputOn ?? "",
+    outputOff: savedConfig.outputOff ?? "",
+    buttonMode: savedConfig.buttonMode === "latched" ? "latched" : "momentary",
+    ledColor: BUTTON_LED_THEMES[savedConfig.ledColor] ? savedConfig.ledColor : "red",
+    componentType,
+  };
+}
+
+function getControlLabel(page, slotId, componentType) {
   const component = componentCatalog[componentType] ?? componentCatalog.button;
+  const config = getComponentConfig(page, slotId, componentType);
+
+  return config.name.trim() || component.label;
+}
+
+function getButtonTheme(colorName) {
+  return BUTTON_LED_THEMES[colorName] ?? BUTTON_LED_THEMES.red;
+}
+
+function getControlStyleAttribute(componentType, config) {
+  if (componentType !== "button") {
+    return "";
+  }
+
+  const theme = getButtonTheme(config.ledColor);
+  return ` style="--control-accent-bright: ${theme.bright}; --control-accent: ${theme.base}; --control-accent-shadow: ${theme.shadow}; --control-accent-glow: ${theme.glow}; --control-accent-soft: ${theme.soft};"`;
+}
+
+function controlUsesToggleOutputs(componentType, config) {
+  if (componentType === "button") {
+    return config.buttonMode === "latched";
+  }
+
+  return ["toggle", "start", "rocker", "light"].includes(componentType);
+}
+
+function updateControlConfigFieldVisibility() {
+  if (!controlConfigTarget) {
+    return;
+  }
+
+  const componentType = controlConfigTarget.componentType;
+  const draftConfig = {
+    buttonMode: controlConfigButtonModeEl.value || "momentary",
+  };
+  const usesToggleOutputs = controlUsesToggleOutputs(componentType, draftConfig);
+  const isButton = componentType === "button";
+
+  controlConfigButtonModeFieldEl.classList.toggle("hidden", !isButton);
+  controlConfigColorFieldEl.classList.toggle("hidden", !isButton);
+  controlConfigPressFieldEl.classList.toggle("hidden", usesToggleOutputs);
+  controlConfigReleaseFieldEl.classList.toggle("hidden", usesToggleOutputs);
+  controlConfigOnFieldEl.classList.toggle("hidden", !usesToggleOutputs);
+  controlConfigOffFieldEl.classList.toggle("hidden", !usesToggleOutputs);
+}
+
+function getSlotControlMarkup(componentType, slotId, isActive = false, options = {}) {
+  const activeClass = isActive ? " is-active" : "";
+  const orientationClass = options.orientation === "horizontal" ? " is-horizontal" : "";
+  const rotateButtonMarkup = options.showRotateButton
+    ? `<button class="control-rotate-button" type="button" data-rotate-slot-id="${slotId}">Rotate</button>`
+    : "";
+  const editButtonMarkup = options.showEditButton
+    ? `<button class="control-edit-button" type="button" data-edit-slot-id="${slotId}">Edit</button>`
+    : "";
+  const controlLabel = options.controlLabel ?? (componentCatalog[componentType] ?? componentCatalog.button).label;
+  const controlStyleAttribute = options.controlStyleAttribute ?? "";
+
+  if (componentType === "start") {
+    return `
+      <div class="slot-filled-button slot-filled-button-start${activeClass}" data-component-type="${componentType}" data-slot-id="${slotId}">
+        ${editButtonMarkup}
+        <div class="slot-control-visual">
+          <div class="start-stack">
+            <div class="start-status-light${activeClass}"></div>
+            ${getControlVisualMarkup(componentType)}
+          </div>
+        </div>
+        <div class="slot-control-label">${controlLabel}</div>
+      </div>
+    `;
+  }
+
+  if (componentType === "toggle") {
+    return `
+      <div class="slot-filled-button slot-filled-button-toggle${activeClass}${orientationClass}" data-component-type="${componentType}" data-slot-id="${slotId}">
+        ${editButtonMarkup}
+        ${rotateButtonMarkup}
+        <div class="slot-control-visual">
+          ${getControlVisualMarkup(componentType)}
+        </div>
+        <div class="slot-control-label">${controlLabel}</div>
+      </div>
+    `;
+  }
+
+  if (componentType === "rocker") {
+    return `
+      <div class="slot-filled-button slot-filled-button-rocker${activeClass}" data-component-type="${componentType}" data-slot-id="${slotId}">
+        ${editButtonMarkup}
+        <div class="slot-control-visual">
+          <div class="rocker-stack">
+            <div class="rocker-pedestal"></div>
+            ${getControlVisualMarkup(componentType)}
+          </div>
+        </div>
+        <div class="slot-control-label">${controlLabel}</div>
+      </div>
+    `;
+  }
+
+  if (componentType === "button") {
+    return `
+      <div class="slot-filled-button slot-filled-button-push${activeClass}" data-component-type="${componentType}" data-slot-id="${slotId}"${controlStyleAttribute}>
+        ${editButtonMarkup}
+        <div class="slot-control-visual">
+          <div class="push-button-stack">
+            <div class="push-button-panel"></div>
+            ${getControlVisualMarkup(componentType)}
+          </div>
+        </div>
+        <div class="slot-control-label">${controlLabel}</div>
+      </div>
+    `;
+  }
 
   return `
-    <div class="slot-filled-button" data-component-type="${componentType}">
+    <div class="slot-filled-button" data-component-type="${componentType}" data-slot-id="${slotId}">
+      ${editButtonMarkup}
       <div class="slot-control-visual">
         ${getControlVisualMarkup(componentType)}
       </div>
-      <div class="slot-control-label">${component.label}</div>
+      <div class="slot-control-label">${controlLabel}</div>
     </div>
   `;
 }
@@ -598,9 +1037,19 @@ function renderLayoutCanvas(page) {
     const componentType = state.placedComponents[slot.id];
 
     if (componentType) {
+      const isActive = Boolean(state.componentStates[slot.id]);
+      const componentSettings = getComponentSettings(page, slot.id, componentType);
+      const componentConfig = getComponentConfig(page, slot.id, componentType);
+      const controlLabel = getControlLabel(page, slot.id, componentType);
       return `
         <div class="drop-slot filled${extraClass}" data-slot-id="${slot.id}">
-          ${getSlotControlMarkup(componentType)}
+          ${getSlotControlMarkup(componentType, slot.id, isActive, {
+            orientation: componentSettings.orientation,
+            showRotateButton: state.mode === "builder" && componentType === "toggle",
+            showEditButton: state.mode === "builder",
+            controlLabel,
+            controlStyleAttribute: getControlStyleAttribute(componentType, componentConfig),
+          })}
         </div>
       `;
     }
@@ -617,6 +1066,19 @@ function renderLayoutPage(page) {
   refs.layoutPickerEl.classList.toggle("hidden", state.mode !== "picker");
   refs.layoutBuilderEl.classList.toggle("hidden", state.mode !== "builder" && state.mode !== "live");
   refs.layoutBuilderEl.classList.toggle("live-mode", state.mode === "live");
+  refs.outputMonitorEl.classList.toggle("hidden", !state.selectedLayout);
+  refs.outputMonitorValueEl.textContent = state.lastOutput;
+  refs.debugDrawerPanelEl.classList.toggle("hidden", !state.debugPanelOpen);
+  refs.debugDrawerToggleEl.setAttribute("aria-expanded", String(state.debugPanelOpen));
+  refs.debugDrawerToggleEl.textContent = state.debugPanelOpen ? "Hide Debug" : "Show Debug";
+  refs.debugLogListEl.innerHTML = state.eventLog.length
+    ? state.eventLog.map((entry) => `
+      <div class="debug-log-entry">
+        <span class="debug-log-time">${entry.time}</span>
+        <span class="debug-log-text">${entry.text}</span>
+      </div>
+    `).join("")
+    : '<div class="debug-log-empty">No events yet.</div>';
 
   if (state.selectedLayout) {
     refs.builderLayoutTitleEl.textContent = layoutTemplates[state.selectedLayout].title;
@@ -626,10 +1088,201 @@ function renderLayoutPage(page) {
   }
 }
 
+function persistLayoutState() {
+  try {
+    const snapshot = layoutPages.map((page) => ({
+      mode: page.state.mode,
+      selectedLayout: page.state.selectedLayout,
+      placedComponents: page.state.placedComponents,
+      componentStates: page.state.componentStates,
+      componentSettings: page.state.componentSettings,
+      componentConfigs: page.state.componentConfigs,
+      eventLog: page.state.eventLog,
+      debugPanelOpen: page.state.debugPanelOpen,
+    }));
+
+    window.localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(snapshot));
+  } catch (error) {
+    console.error("Unable to save layout state:", error);
+  }
+}
+
+function loadSavedLayoutState() {
+  try {
+    const rawValue = window.localStorage.getItem(LAYOUT_STORAGE_KEY);
+
+    if (!rawValue) {
+      return;
+    }
+
+    const savedPages = JSON.parse(rawValue);
+
+    if (!Array.isArray(savedPages)) {
+      return;
+    }
+
+    savedPages.forEach((savedState, index) => {
+      const page = layoutPages[index];
+
+      if (!page || typeof savedState !== "object" || savedState === null) {
+        return;
+      }
+
+      page.state.mode = savedState.mode ?? page.state.mode;
+      page.state.selectedLayout = savedState.selectedLayout ?? null;
+      page.state.placedComponents = savedState.placedComponents ?? {};
+      page.state.componentStates = savedState.componentStates ?? {};
+      page.state.componentSettings = savedState.componentSettings ?? {};
+      page.state.componentConfigs = savedState.componentConfigs ?? {};
+      page.state.eventLog = Array.isArray(savedState.eventLog) ? savedState.eventLog : [];
+      page.state.debugPanelOpen = Boolean(savedState.debugPanelOpen);
+    });
+  } catch (error) {
+    console.error("Unable to load saved layout state:", error);
+  }
+}
+
+function closeControlConfig() {
+  controlConfigTarget = null;
+  controlConfigModalEl.classList.add("hidden");
+}
+
+function openControlConfig(page, slotId) {
+  const componentType = page.state.placedComponents[slotId];
+
+  if (!componentType) {
+    return;
+  }
+
+  const config = getComponentConfig(page, slotId, componentType);
+  const defaultLabel = (componentCatalog[componentType] ?? componentCatalog.button).label;
+
+  controlConfigTarget = { page, slotId, componentType };
+  controlConfigTitleEl.textContent = `Edit ${defaultLabel}`;
+  controlConfigCopyEl.textContent = "Set the visible label and the output strings this control should send in live mode.";
+  controlConfigNameEl.value = config.name;
+  controlConfigButtonModeEl.value = config.buttonMode;
+  controlConfigColorEl.value = config.ledColor;
+  controlConfigOutputPressEl.value = config.outputPress;
+  controlConfigOutputReleaseEl.value = config.outputRelease;
+  controlConfigOutputOnEl.value = config.outputOn;
+  controlConfigOutputOffEl.value = config.outputOff;
+  updateControlConfigFieldVisibility();
+  controlConfigModalEl.classList.remove("hidden");
+  controlConfigNameEl.focus();
+}
+
+function saveControlConfig() {
+  if (!controlConfigTarget) {
+    return;
+  }
+
+  const { page, slotId, componentType } = controlConfigTarget;
+  page.state.componentConfigs[slotId] = {
+    ...getComponentConfig(page, slotId, componentType),
+    name: controlConfigNameEl.value.trim(),
+    outputPress: controlConfigOutputPressEl.value.trim(),
+    outputRelease: controlConfigOutputReleaseEl.value.trim(),
+    outputOn: controlConfigOutputOnEl.value.trim(),
+    outputOff: controlConfigOutputOffEl.value.trim(),
+    buttonMode: controlConfigButtonModeEl.value === "latched" ? "latched" : "momentary",
+    ledColor: BUTTON_LED_THEMES[controlConfigColorEl.value] ? controlConfigColorEl.value : "red",
+  };
+
+  if (componentType === "button" && page.state.componentConfigs[slotId].buttonMode === "momentary") {
+    page.state.componentStates[slotId] = false;
+  }
+
+  renderLayoutPage(page);
+  persistLayoutState();
+  closeControlConfig();
+}
+
+async function emitControlOutput(page, slotId, outputType, componentType) {
+  const config = getComponentConfig(page, slotId, componentType);
+  const controlName = getControlLabel(page, slotId, componentType);
+  const outputMap = {
+    press: config.outputPress,
+    release: config.outputRelease,
+    on: config.outputOn,
+    off: config.outputOff,
+  };
+  const output = (outputMap[outputType] ?? "").trim();
+  const timestamp = new Date();
+  const displayTime = timestamp.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  page.state.lastOutput = output
+    ? `${controlName}: ${output}`
+    : `${controlName}: no output mapped for ${outputType}`;
+  page.state.eventLog = [
+    {
+      time: displayTime,
+      text: page.state.lastOutput,
+    },
+    ...page.state.eventLog,
+  ].slice(0, 20);
+  page.refs.outputMonitorValueEl.textContent = page.state.lastOutput;
+  page.refs.debugLogListEl.innerHTML = page.state.eventLog.map((entry) => `
+    <div class="debug-log-entry">
+      <span class="debug-log-time">${entry.time}</span>
+      <span class="debug-log-text">${entry.text}</span>
+    </div>
+  `).join("");
+  persistLayoutState();
+
+  if (!output) {
+    return;
+  }
+
+  const payload = {
+    page: page.index + 1,
+    slotId,
+    componentType,
+    controlName,
+    outputType,
+    output,
+    timestamp: timestamp.toISOString(),
+  };
+
+  try {
+    await fetch("/api/control-event", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    console.info("Control output sent:", payload);
+  } catch (error) {
+    console.error("Control output dispatch failed:", error);
+    page.state.lastOutput = `${controlName}: ${output} (dispatch failed)`;
+    page.refs.outputMonitorValueEl.textContent = page.state.lastOutput;
+    page.state.eventLog = [
+      {
+        time: displayTime,
+        text: page.state.lastOutput,
+      },
+      ...page.state.eventLog.filter((entry, index) => index !== 0),
+    ].slice(0, 20);
+    page.refs.debugLogListEl.innerHTML = page.state.eventLog.map((entry) => `
+      <div class="debug-log-entry">
+        <span class="debug-log-time">${entry.time}</span>
+        <span class="debug-log-text">${entry.text}</span>
+      </div>
+    `).join("");
+    persistLayoutState();
+  }
+}
+
 function openLayoutPicker(page) {
   page.state.mode = "picker";
   renderLayoutPage(page);
   closeDeleteConfirm();
+  closeControlConfig();
 }
 
 function openLayoutBuilder(page, layoutKey) {
@@ -639,14 +1292,23 @@ function openLayoutBuilder(page, layoutKey) {
 
   page.state.selectedLayout = layoutKey;
   page.state.placedComponents = {};
+  page.state.componentStates = {};
+  page.state.componentSettings = {};
+  page.state.componentConfigs = {};
+  page.state.lastOutput = "Nothing sent yet.";
+  page.state.eventLog = [];
+  page.state.debugPanelOpen = false;
   page.state.mode = "builder";
   renderLayoutPage(page);
+  closeControlConfig();
+  persistLayoutState();
 }
 
 function resetLayoutFlow(page) {
   page.state.mode = page.state.selectedLayout ? "builder" : "picker";
   renderLayoutPage(page);
   closeDeleteConfirm();
+  closeControlConfig();
   closeAllMenus();
 }
 
@@ -657,18 +1319,28 @@ function finalizeCurrentLayout(page) {
 
   page.state.mode = "live";
   renderLayoutPage(page);
+  closeControlConfig();
+  persistLayoutState();
 }
 
 function resetToCreateLayout(page) {
   page.state.selectedLayout = null;
   page.state.placedComponents = {};
+  page.state.componentStates = {};
+  page.state.componentSettings = {};
+  page.state.componentConfigs = {};
+  page.state.lastOutput = "Nothing sent yet.";
+  page.state.eventLog = [];
+  page.state.debugPanelOpen = false;
   page.state.mode = "start";
   renderLayoutPage(page);
+  closeControlConfig();
+  persistLayoutState();
 }
 
 function shouldIgnoreSwipeTarget(target) {
   return Boolean(
-    target.closest(".menu-wrap, .layout-option, .create-layout-button, .palette-item, .drop-slot, .slot-filled-button, .component-sidebar, .component-dropzone, .builder-submit-button, .confirm-dialog"),
+    target.closest(".menu-wrap, .layout-option, .create-layout-button, .palette-item, .drop-slot, .slot-filled-button, .component-sidebar, .component-dropzone, .builder-submit-button, .confirm-dialog, .control-config-dialog, .control-edit-button, .control-rotate-button, .debug-drawer"),
   );
 }
 
@@ -760,7 +1432,12 @@ function stopDrag(event) {
   event.preventDefault();
 
   if (activeDrag.currentPage && activeDrag.currentSlotId) {
+    delete activeDrag.currentPage.state.componentStates[activeDrag.currentSlotId];
     activeDrag.currentPage.state.placedComponents[activeDrag.currentSlotId] = activeDrag.componentType;
+    activeDrag.currentPage.state.componentSettings[activeDrag.currentSlotId] = { ...activeDrag.originSettings };
+    activeDrag.currentPage.state.componentConfigs[activeDrag.currentSlotId] = activeDrag.originPage && activeDrag.originSlotId
+      ? { ...(activeDrag.originPage.state.componentConfigs[activeDrag.originSlotId] ?? {}) }
+      : {};
 
     if (
       activeDrag.originPage
@@ -768,13 +1445,21 @@ function stopDrag(event) {
       && (activeDrag.originPage !== activeDrag.currentPage || activeDrag.originSlotId !== activeDrag.currentSlotId)
     ) {
       delete activeDrag.originPage.state.placedComponents[activeDrag.originSlotId];
+      delete activeDrag.originPage.state.componentSettings[activeDrag.originSlotId];
+      delete activeDrag.originPage.state.componentStates[activeDrag.originSlotId];
+      delete activeDrag.originPage.state.componentConfigs[activeDrag.originSlotId];
       renderLayoutPage(activeDrag.originPage);
     }
 
     renderLayoutPage(activeDrag.currentPage);
+    persistLayoutState();
   } else if (activeDrag.overTray && activeDrag.originPage && activeDrag.originSlotId) {
     delete activeDrag.originPage.state.placedComponents[activeDrag.originSlotId];
+    delete activeDrag.originPage.state.componentSettings[activeDrag.originSlotId];
+    delete activeDrag.originPage.state.componentStates[activeDrag.originSlotId];
+    delete activeDrag.originPage.state.componentConfigs[activeDrag.originSlotId];
     renderLayoutPage(activeDrag.originPage);
+    persistLayoutState();
   }
 
   clearSlotHighlights();
@@ -803,6 +1488,7 @@ function startDrag(event, sourceEl, componentType, originPage = null, originSlot
     componentType,
     originPage,
     originSlotId,
+    originSettings: originPage && originSlotId ? { ...(originPage.state.componentSettings[originSlotId] ?? {}) } : {},
     currentPage: null,
     currentSlotId: null,
     overTray: false,
@@ -832,12 +1518,98 @@ function handleLiveControlPress(event) {
 
   event.preventDefault();
   pressedLiveControl = filledControl;
+
+  if (filledControl.dataset.componentType === "start") {
+    const slotId = filledControl.dataset.slotId;
+    const nextState = !page.state.componentStates[slotId];
+    page.state.componentStates[slotId] = nextState;
+    renderLayoutPage(page);
+    persistLayoutState();
+    emitControlOutput(page, slotId, nextState ? "on" : "off", "start");
+    pressedLiveControl = null;
+    return;
+  }
+
+  if (filledControl.dataset.componentType === "rocker") {
+    const slotId = filledControl.dataset.slotId;
+    const nextState = !page.state.componentStates[slotId];
+    page.state.componentStates[slotId] = nextState;
+    renderLayoutPage(page);
+    persistLayoutState();
+    emitControlOutput(page, slotId, nextState ? "on" : "off", "rocker");
+    pressedLiveControl = null;
+    return;
+  }
+
+  if (filledControl.dataset.componentType === "button") {
+    const slotId = filledControl.dataset.slotId;
+    const config = getComponentConfig(page, slotId, "button");
+
+    if (config.buttonMode === "latched") {
+      const nextState = !page.state.componentStates[slotId];
+      page.state.componentStates[slotId] = nextState;
+      renderLayoutPage(page);
+      persistLayoutState();
+      emitControlOutput(page, slotId, nextState ? "on" : "off", "button");
+      pressedLiveControl = null;
+      return;
+    }
+
+    pressedLiveControl.classList.add("pressed");
+    emitControlOutput(page, slotId, "press", "button");
+    return;
+  }
+
+  if (filledControl.dataset.componentType === "toggle") {
+    liveToggleGesture = {
+      page,
+      slotId: filledControl.dataset.slotId,
+      startX: event.clientX,
+      startY: event.clientY,
+    };
+    pressedLiveControl.classList.add("pressed");
+    return;
+  }
+
   pressedLiveControl.classList.add("pressed");
+
+  if (filledControl.dataset.componentType === "light") {
+    emitControlOutput(page, filledControl.dataset.slotId, "press", filledControl.dataset.componentType);
+  }
 }
 
-function clearLiveControlPress() {
+function clearLiveControlPress(event) {
+  if (liveToggleGesture && event?.type === "pointerup") {
+    const deltaX = event.clientX - liveToggleGesture.startX;
+    const deltaY = event.clientY - liveToggleGesture.startY;
+    const isTap = Math.abs(deltaX) < 12 && Math.abs(deltaY) < 12;
+    const isSwipeUp = deltaY < -20 && Math.abs(deltaY) > Math.abs(deltaX);
+
+    if (isTap || isSwipeUp) {
+      const nextState = !liveToggleGesture.page.state.componentStates[liveToggleGesture.slotId];
+      liveToggleGesture.page.state.componentStates[liveToggleGesture.slotId] = nextState;
+      renderLayoutPage(liveToggleGesture.page);
+      persistLayoutState();
+      emitControlOutput(liveToggleGesture.page, liveToggleGesture.slotId, nextState ? "on" : "off", "toggle");
+    }
+  }
+
+  liveToggleGesture = null;
+
   if (!pressedLiveControl) {
     return;
+  }
+
+  if (
+    event?.type === "pointerup"
+    && (pressedLiveControl.dataset.componentType === "button" || pressedLiveControl.dataset.componentType === "light")
+  ) {
+    const pageEl = pressedLiveControl.closest(".button-box-page");
+    const page = layoutPages.find((item) => item.pageEl === pageEl);
+
+    if (page) {
+      emitControlOutput(page, pressedLiveControl.dataset.slotId, "release", pressedLiveControl.dataset.componentType);
+    }
   }
 
   pressedLiveControl.classList.remove("pressed");
@@ -859,6 +1631,11 @@ layoutPages.forEach((page) => {
   refs.deleteCurrentMenuItemEl.addEventListener("click", () => openDeleteConfirm(page));
   refs.createLayoutButtonEl.addEventListener("click", () => openLayoutPicker(page));
   refs.finalizeLayoutButtonEl.addEventListener("click", () => finalizeCurrentLayout(page));
+  refs.debugDrawerToggleEl.addEventListener("click", () => {
+    page.state.debugPanelOpen = !page.state.debugPanelOpen;
+    renderLayoutPage(page);
+    persistLayoutState();
+  });
 
   refs.layoutOptionEls.forEach((option) => {
     option.addEventListener("click", () => openLayoutBuilder(page, option.dataset.layout));
@@ -876,6 +1653,31 @@ layoutPages.forEach((page) => {
 
   refs.layoutCanvasEl.addEventListener("pointerdown", (event) => {
     if (page.state.mode === "builder") {
+      const editButton = event.target.closest(".control-edit-button");
+
+      if (editButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        openControlConfig(page, editButton.dataset.editSlotId);
+        return;
+      }
+
+      const rotateButton = event.target.closest(".control-rotate-button");
+
+      if (rotateButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const slotId = rotateButton.dataset.rotateSlotId;
+        const currentSettings = getComponentSettings(page, slotId, "toggle");
+        page.state.componentSettings[slotId] = {
+          ...currentSettings,
+          orientation: currentSettings.orientation === "horizontal" ? "vertical" : "horizontal",
+        };
+        renderLayoutPage(page);
+        persistLayoutState();
+        return;
+      }
+
       const filledControl = event.target.closest(".slot-filled-button");
 
       if (filledControl) {
@@ -892,7 +1694,10 @@ layoutPages.forEach((page) => {
   });
 
   refs.layoutCanvasEl.addEventListener("pointerup", clearLiveControlPress);
-  refs.layoutCanvasEl.addEventListener("pointerleave", clearLiveControlPress);
+  refs.layoutCanvasEl.addEventListener("pointerleave", () => {
+    liveToggleGesture = null;
+    clearLiveControlPress();
+  });
   refs.layoutCanvasEl.addEventListener("pointercancel", clearLiveControlPress);
 
   renderLayoutPage(page);
@@ -907,6 +1712,9 @@ confirmDeleteYesEl.addEventListener("click", () => {
 });
 
 confirmDeleteNoEl.addEventListener("click", closeDeleteConfirm);
+controlConfigSaveEl.addEventListener("click", saveControlConfig);
+controlConfigCancelEl.addEventListener("click", closeControlConfig);
+controlConfigButtonModeEl.addEventListener("change", updateControlConfigFieldVisibility);
 
 document.addEventListener("pointerdown", (event) => {
   if (!event.target.closest(".menu-wrap")) {
@@ -915,6 +1723,10 @@ document.addEventListener("pointerdown", (event) => {
 
   if (!event.target.closest(".confirm-dialog") && !deleteConfirmModalEl.classList.contains("hidden")) {
     closeDeleteConfirm();
+  }
+
+  if (!event.target.closest(".control-config-dialog") && !controlConfigModalEl.classList.contains("hidden")) {
+    closeControlConfig();
   }
 });
 
@@ -950,8 +1762,16 @@ appShellEl.addEventListener("touchend", (event) => {
     return;
   }
 
-  const touchEndX = event.changedTouches[0].clientX;
-  handleSwipe(touchEndX - touchStartX);
+  const touch = event.changedTouches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+
+  if (currentPage === 0 && Math.abs(deltaY) > Math.abs(deltaX)) {
+    handleTelemetrySwipe(deltaY);
+  } else {
+    handleSwipe(deltaX);
+  }
+
   touchStartX = null;
   touchStartY = null;
 }, { passive: true });
@@ -961,7 +1781,74 @@ appShellEl.addEventListener("touchcancel", () => {
   touchStartY = null;
 });
 
-setInterval(fetchTelemetry, 100);
+appShellEl.addEventListener("pointerdown", (event) => {
+  if (event.pointerType !== "mouse" || event.button !== 0 || activeDrag) {
+    return;
+  }
+
+  if (shouldIgnoreSwipeTarget(event.target)) {
+    pointerSwipe = null;
+    return;
+  }
+
+  pointerSwipe = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+  };
+});
+
+appShellEl.addEventListener("pointermove", (event) => {
+  if (
+    !pointerSwipe
+    || event.pointerType !== "mouse"
+    || event.pointerId !== pointerSwipe.pointerId
+  ) {
+    return;
+  }
+
+  const deltaX = event.clientX - pointerSwipe.startX;
+  const deltaY = event.clientY - pointerSwipe.startY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    event.preventDefault();
+  }
+});
+
+function clearPointerSwipe() {
+  pointerSwipe = null;
+}
+
+appShellEl.addEventListener("pointerup", (event) => {
+  if (
+    !pointerSwipe
+    || event.pointerType !== "mouse"
+    || event.pointerId !== pointerSwipe.pointerId
+  ) {
+    return;
+  }
+
+  const deltaX = event.clientX - pointerSwipe.startX;
+  const deltaY = event.clientY - pointerSwipe.startY;
+
+  if (currentPage === 0 && Math.abs(deltaY) > Math.abs(deltaX)) {
+    handleTelemetrySwipe(deltaY);
+  } else {
+    handleSwipe(deltaX);
+  }
+
+  clearPointerSwipe();
+});
+
+appShellEl.addEventListener("pointercancel", clearPointerSwipe);
+appShellEl.addEventListener("pointerleave", clearPointerSwipe);
+
+setInterval(() => {
+  if (currentPage === 0) {
+    fetchTelemetry();
+  }
+}, 250);
 fetchTelemetry();
 setPage(0);
+setTelemetryPage(0);
 closeDeleteConfirm();
