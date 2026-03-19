@@ -7,14 +7,27 @@ const controlConfigModalEl = document.getElementById("control-config-modal");
 const controlConfigTitleEl = document.getElementById("control-config-title");
 const controlConfigCopyEl = document.getElementById("control-config-copy");
 const controlConfigNameEl = document.getElementById("control-config-name");
+const controlConfigButtonNumberFieldEl = document.getElementById("control-config-button-number-field");
+const controlConfigButtonNumberLabelEl = document.getElementById("control-config-button-number-label");
+const controlConfigButtonNumberEl = document.getElementById("control-config-button-number");
+const controlConfigEncoderCwButtonNumberFieldEl = document.getElementById("control-config-encoder-cw-button-number-field");
+const controlConfigEncoderCwButtonNumberEl = document.getElementById("control-config-encoder-cw-button-number");
+const controlConfigEncoderCcwButtonNumberFieldEl = document.getElementById("control-config-encoder-ccw-button-number-field");
+const controlConfigEncoderCcwButtonNumberEl = document.getElementById("control-config-encoder-ccw-button-number");
+const controlConfigSignalModeFieldEl = document.getElementById("control-config-signal-mode-field");
+const controlConfigSignalModeEl = document.getElementById("control-config-signal-mode");
 const controlConfigButtonModeFieldEl = document.getElementById("control-config-button-mode-field");
 const controlConfigButtonModeEl = document.getElementById("control-config-button-mode");
 const controlConfigColorFieldEl = document.getElementById("control-config-color-field");
 const controlConfigColorEl = document.getElementById("control-config-color");
 const controlConfigPressFieldEl = document.getElementById("control-config-press-field");
+const controlConfigPressLabelEl = document.getElementById("control-config-press-label");
 const controlConfigReleaseFieldEl = document.getElementById("control-config-release-field");
+const controlConfigReleaseLabelEl = document.getElementById("control-config-release-label");
 const controlConfigOnFieldEl = document.getElementById("control-config-on-field");
+const controlConfigOnLabelEl = document.getElementById("control-config-on-label");
 const controlConfigOffFieldEl = document.getElementById("control-config-off-field");
+const controlConfigOffLabelEl = document.getElementById("control-config-off-label");
 const controlConfigOutputPressEl = document.getElementById("control-config-output-press");
 const controlConfigOutputReleaseEl = document.getElementById("control-config-output-release");
 const controlConfigOutputOnEl = document.getElementById("control-config-output-on");
@@ -73,6 +86,7 @@ let activeDrag = null;
 let deleteTargetPage = null;
 let pressedLiveControl = null;
 let liveToggleGesture = null;
+let liveRotaryGesture = null;
 let controlConfigTarget = null;
 
 const layoutTemplates = {
@@ -241,6 +255,7 @@ const orderedLayoutEntries = Object.entries(layoutTemplates)
 
 const componentCatalog = {
   button: { label: "Button" },
+  rotary: { label: "Rotary" },
   toggle: { label: "Toggle" },
   rocker: { label: "Rocker" },
   light: { label: "Light" },
@@ -566,6 +581,21 @@ function getPaletteMarkup() {
         <div>
           <div class="palette-item-label">Button</div>
           <div class="palette-item-caption">Momentary push</div>
+        </div>
+      </div>
+
+      <div class="palette-item" role="button" tabindex="0" data-component-type="rotary">
+        <div class="palette-item-preview preview-rotary">
+          <div class="control-face control-rotary-face">
+            <div class="control-rotary-bezel"></div>
+            <div class="control-rotary-knob">
+              <div class="control-rotary-pointer"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="palette-item-label">Rotary</div>
+          <div class="palette-item-caption">Encoder CW / CCW</div>
         </div>
       </div>
 
@@ -985,6 +1015,15 @@ function getControlVisualMarkup(componentType) {
           <div class="control-toggle-lever"></div>
         </div>
       `;
+    case "rotary":
+      return `
+        <div class="control-face control-rotary-face">
+          <div class="control-rotary-bezel"></div>
+          <div class="control-rotary-knob">
+            <div class="control-rotary-pointer"></div>
+          </div>
+        </div>
+      `;
     case "rocker":
       return `
         <div class="control-face control-rocker-face">
@@ -1039,8 +1078,198 @@ function getComponentConfig(page, slotId, componentType) {
     outputOff: savedConfig.outputOff ?? "",
     buttonMode: savedConfig.buttonMode === "latched" ? "latched" : "momentary",
     ledColor: BUTTON_LED_THEMES[savedConfig.ledColor] ? savedConfig.ledColor : "red",
+    buttonNumber: Number.isInteger(savedConfig.buttonNumber) && savedConfig.buttonNumber > 0 ? savedConfig.buttonNumber : null,
+    cwButtonNumber: Number.isInteger(savedConfig.cwButtonNumber) && savedConfig.cwButtonNumber > 0 ? savedConfig.cwButtonNumber : null,
+    ccwButtonNumber: Number.isInteger(savedConfig.ccwButtonNumber) && savedConfig.ccwButtonNumber > 0 ? savedConfig.ccwButtonNumber : null,
+    signalMode: savedConfig.signalMode === "state" ? "state" : "pulse",
     componentType,
   };
+}
+
+function parseButtonCommand(command) {
+  const match = String(command || "").trim().match(/^BTN(?::)?(\d+)(?::([A-Z+\-]+)(?::(\d+))?)?$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    buttonNumber: Number.parseInt(match[1], 10),
+    action: (match[2] ?? "").toUpperCase(),
+    durationMs: match[3] ? Number.parseInt(match[3], 10) : null,
+  };
+}
+
+function inferButtonPickerConfig(componentType, config) {
+  if (componentType === "rotary") {
+    const pressCommand = parseButtonCommand(config.outputPress);
+    const releaseCommand = parseButtonCommand(config.outputRelease);
+
+    if (
+      pressCommand
+      && releaseCommand
+      && pressCommand.buttonNumber > 0
+      && releaseCommand.buttonNumber === pressCommand.buttonNumber + 1
+      && ["+", "CW", "TAP"].includes(pressCommand.action || "+")
+      && ["-", "CCW", "TAP"].includes(releaseCommand.action || "-")
+    ) {
+      return {
+        buttonNumber: pressCommand.buttonNumber,
+        cwButtonNumber: pressCommand.buttonNumber,
+        ccwButtonNumber: releaseCommand.buttonNumber,
+        signalMode: "pulse",
+      };
+    }
+
+    if (
+      pressCommand
+      && releaseCommand
+      && pressCommand.buttonNumber > 0
+      && releaseCommand.buttonNumber > 0
+      && ["+", "CW", "TAP"].includes(pressCommand.action || "+")
+      && ["-", "CCW", "TAP"].includes(releaseCommand.action || "-")
+    ) {
+      return {
+        buttonNumber: pressCommand.buttonNumber,
+        cwButtonNumber: pressCommand.buttonNumber,
+        ccwButtonNumber: releaseCommand.buttonNumber,
+        signalMode: "pulse",
+      };
+    }
+  }
+
+  if (componentType === "button" && config.buttonMode === "momentary") {
+    const pressCommand = parseButtonCommand(config.outputPress);
+    const releaseCommand = parseButtonCommand(config.outputRelease);
+
+    if (
+      pressCommand
+      && releaseCommand
+      && pressCommand.buttonNumber === releaseCommand.buttonNumber
+      && (pressCommand.action === "DOWN" || pressCommand.action === "")
+      && (releaseCommand.action === "UP" || releaseCommand.action === "")
+    ) {
+      return { buttonNumber: pressCommand.buttonNumber, signalMode: "state" };
+    }
+  }
+
+  const onCommand = parseButtonCommand(config.outputOn);
+  const offCommand = parseButtonCommand(config.outputOff);
+
+  if (onCommand && offCommand && onCommand.buttonNumber === offCommand.buttonNumber) {
+    const stateMode = onCommand.action === "ON" && offCommand.action === "OFF";
+    const pulseMode = onCommand.action === "TAP" && offCommand.action === "TAP";
+    const legacySameButton = !onCommand.action && !offCommand.action;
+
+    if (stateMode || pulseMode || legacySameButton) {
+      return {
+        buttonNumber: onCommand.buttonNumber,
+        signalMode: stateMode ? "state" : "pulse",
+      };
+    }
+  }
+
+  return { buttonNumber: null, signalMode: "pulse" };
+}
+
+function componentSupportsSignalMode(componentType, config) {
+  return ["toggle", "rocker", "start"].includes(componentType) || (componentType === "button" && config.buttonMode === "latched");
+}
+
+function buildAutoOutputMap(componentType, config) {
+  const buttonNumber = Number.parseInt(config.buttonNumber, 10);
+
+  if (componentType === "rotary") {
+    const cwButtonNumber = Number.parseInt(config.cwButtonNumber, 10);
+    const ccwButtonNumber = Number.parseInt(config.ccwButtonNumber, 10);
+    const resolvedCwButtonNumber = Number.isInteger(cwButtonNumber) && cwButtonNumber > 0
+      ? cwButtonNumber
+      : (Number.isInteger(buttonNumber) && buttonNumber > 0 ? buttonNumber : null);
+    const resolvedCcwButtonNumber = Number.isInteger(ccwButtonNumber) && ccwButtonNumber > 0
+      ? ccwButtonNumber
+      : (resolvedCwButtonNumber ? resolvedCwButtonNumber + 1 : null);
+
+    if (!resolvedCwButtonNumber || !resolvedCcwButtonNumber) {
+      return null;
+    }
+
+    return {
+      outputPress: `BTN:${resolvedCwButtonNumber}:TAP`,
+      outputRelease: `BTN:${resolvedCcwButtonNumber}:TAP`,
+    };
+  }
+
+  if (!Number.isInteger(buttonNumber) || buttonNumber < 1) {
+    return null;
+  }
+
+  if (componentType === "button" && config.buttonMode === "momentary") {
+    return {
+      outputPress: `BTN:${buttonNumber}:DOWN`,
+      outputRelease: `BTN:${buttonNumber}:UP`,
+    };
+  }
+
+  if (componentType === "light") {
+    return {
+      outputPress: `BTN:${buttonNumber}:DOWN`,
+      outputRelease: `BTN:${buttonNumber}:UP`,
+    };
+  }
+
+  if (componentSupportsSignalMode(componentType, config)) {
+    const pulseCommand = `BTN:${buttonNumber}:TAP`;
+
+    if (config.signalMode === "state") {
+      return {
+        outputOn: `BTN:${buttonNumber}:ON`,
+        outputOff: `BTN:${buttonNumber}:OFF`,
+      };
+    }
+
+    return {
+      outputOn: pulseCommand,
+      outputOff: pulseCommand,
+    };
+  }
+
+  return null;
+}
+
+function resolveConfiguredOutput(componentType, config, outputType) {
+  const autoOutputMap = buildAutoOutputMap(componentType, config);
+
+  if (autoOutputMap && autoOutputMap[outputType]) {
+    return autoOutputMap[outputType];
+  }
+
+  if (componentType === "rocker" && (outputType === "on" || outputType === "off")) {
+    const onCommand = parseButtonCommand(config.outputOn);
+    const offCommand = parseButtonCommand(config.outputOff);
+
+    if (
+      onCommand
+      && offCommand
+      && onCommand.buttonNumber === offCommand.buttonNumber
+      && (
+        (!onCommand.action && !offCommand.action)
+        || (onCommand.action === "ON" && offCommand.action === "OFF")
+      )
+    ) {
+      return `BTN:${onCommand.buttonNumber}:TAP`;
+    }
+  }
+
+  const outputMap = {
+    press: config.outputPress,
+    release: config.outputRelease,
+    cw: config.outputPress,
+    ccw: config.outputRelease,
+    on: config.outputOn,
+    off: config.outputOff,
+  };
+
+  return (outputMap[outputType] ?? "").trim();
 }
 
 function getControlLabel(page, slotId, componentType) {
@@ -1068,7 +1297,7 @@ function controlUsesToggleOutputs(componentType, config) {
     return config.buttonMode === "latched";
   }
 
-  return ["toggle", "start", "rocker", "light"].includes(componentType);
+  return ["toggle", "start", "rocker"].includes(componentType);
 }
 
 function updateControlConfigFieldVisibility() {
@@ -1079,16 +1308,36 @@ function updateControlConfigFieldVisibility() {
   const componentType = controlConfigTarget.componentType;
   const draftConfig = {
     buttonMode: controlConfigButtonModeEl.value || "momentary",
+    signalMode: controlConfigSignalModeEl.value === "state" ? "state" : "pulse",
   };
   const usesToggleOutputs = controlUsesToggleOutputs(componentType, draftConfig);
   const isButton = componentType === "button";
+  const isRotary = componentType === "rotary";
+  const supportsSignalMode = componentSupportsSignalMode(componentType, draftConfig);
 
+  controlConfigButtonNumberFieldEl.classList.toggle("hidden", isRotary);
+  controlConfigEncoderCwButtonNumberFieldEl.classList.toggle("hidden", !isRotary);
+  controlConfigEncoderCcwButtonNumberFieldEl.classList.toggle("hidden", !isRotary);
+  controlConfigSignalModeFieldEl.classList.toggle("hidden", !supportsSignalMode || isRotary);
   controlConfigButtonModeFieldEl.classList.toggle("hidden", !isButton);
   controlConfigColorFieldEl.classList.toggle("hidden", !isButton);
   controlConfigPressFieldEl.classList.toggle("hidden", usesToggleOutputs);
   controlConfigReleaseFieldEl.classList.toggle("hidden", usesToggleOutputs);
   controlConfigOnFieldEl.classList.toggle("hidden", !usesToggleOutputs);
   controlConfigOffFieldEl.classList.toggle("hidden", !usesToggleOutputs);
+
+  controlConfigButtonNumberLabelEl.textContent = isRotary ? "Encoder Base Button #" : "VJoy Button #";
+  controlConfigPressLabelEl.textContent = isRotary ? "Clockwise Output" : "Pressed Output";
+  controlConfigReleaseLabelEl.textContent = isRotary ? "Counter-Clockwise Output" : "Released Output";
+  controlConfigOnLabelEl.textContent = "On Output";
+  controlConfigOffLabelEl.textContent = "Off Output";
+  controlConfigButtonNumberEl.placeholder = isRotary ? "6" : "13";
+  controlConfigEncoderCwButtonNumberEl.placeholder = "6";
+  controlConfigEncoderCcwButtonNumberEl.placeholder = "7";
+  controlConfigOutputPressEl.placeholder = isRotary ? "BTN6:+" : "BTN:13";
+  controlConfigOutputReleaseEl.placeholder = isRotary ? "BTN6:-" : "BTN:13:UP";
+  controlConfigOutputOnEl.placeholder = supportsSignalMode ? "BTN:13:TAP" : "SW:IGNITION:ON";
+  controlConfigOutputOffEl.placeholder = supportsSignalMode ? "BTN:13:TAP" : "SW:IGNITION:OFF";
 }
 
 function getSlotControlMarkup(componentType, slotId, isActive = false, options = {}) {
@@ -1138,6 +1387,21 @@ function getSlotControlMarkup(componentType, slotId, isActive = false, options =
         <div class="slot-control-visual">
           <div class="rocker-stack">
             <div class="rocker-pedestal"></div>
+            ${getControlVisualMarkup(componentType)}
+          </div>
+        </div>
+        <div class="slot-control-label">${controlLabel}</div>
+      </div>
+    `;
+  }
+
+  if (componentType === "rotary") {
+    return `
+      <div class="slot-filled-button slot-filled-button-rotary" data-component-type="${componentType}" data-slot-id="${slotId}">
+        ${editButtonMarkup}
+        <div class="slot-control-visual">
+          <div class="rotary-stack">
+            <div class="rotary-panel"></div>
             ${getControlVisualMarkup(componentType)}
           </div>
         </div>
@@ -1307,11 +1571,19 @@ function openControlConfig(page, slotId) {
 
   const config = getComponentConfig(page, slotId, componentType);
   const defaultLabel = (componentCatalog[componentType] ?? componentCatalog.button).label;
+  const isRotary = componentType === "rotary";
+  const inferredPickerConfig = inferButtonPickerConfig(componentType, config);
 
   controlConfigTarget = { page, slotId, componentType };
   controlConfigTitleEl.textContent = `Edit ${defaultLabel}`;
-  controlConfigCopyEl.textContent = "Set the visible label and the output strings this control should send in live mode.";
+  controlConfigCopyEl.textContent = isRotary
+    ? "Set the visible label plus the clockwise and counter-clockwise outputs this encoder should send."
+    : "Set the visible label and the output strings this control should send in live mode.";
   controlConfigNameEl.value = config.name;
+  controlConfigButtonNumberEl.value = config.buttonNumber ?? inferredPickerConfig.buttonNumber ?? "";
+  controlConfigEncoderCwButtonNumberEl.value = config.cwButtonNumber ?? inferredPickerConfig.cwButtonNumber ?? "";
+  controlConfigEncoderCcwButtonNumberEl.value = config.ccwButtonNumber ?? inferredPickerConfig.ccwButtonNumber ?? "";
+  controlConfigSignalModeEl.value = config.buttonNumber ? config.signalMode : (inferredPickerConfig.signalMode ?? "pulse");
   controlConfigButtonModeEl.value = config.buttonMode;
   controlConfigColorEl.value = config.ledColor;
   controlConfigOutputPressEl.value = config.outputPress;
@@ -1329,7 +1601,7 @@ function saveControlConfig() {
   }
 
   const { page, slotId, componentType } = controlConfigTarget;
-  page.state.componentConfigs[slotId] = {
+  const nextConfig = {
     ...getComponentConfig(page, slotId, componentType),
     name: controlConfigNameEl.value.trim(),
     outputPress: controlConfigOutputPressEl.value.trim(),
@@ -1338,7 +1610,31 @@ function saveControlConfig() {
     outputOff: controlConfigOutputOffEl.value.trim(),
     buttonMode: controlConfigButtonModeEl.value === "latched" ? "latched" : "momentary",
     ledColor: BUTTON_LED_THEMES[controlConfigColorEl.value] ? controlConfigColorEl.value : "red",
+    buttonNumber: Number.isInteger(Number.parseInt(controlConfigButtonNumberEl.value, 10))
+      && Number.parseInt(controlConfigButtonNumberEl.value, 10) > 0
+      ? Number.parseInt(controlConfigButtonNumberEl.value, 10)
+      : null,
+    cwButtonNumber: Number.isInteger(Number.parseInt(controlConfigEncoderCwButtonNumberEl.value, 10))
+      && Number.parseInt(controlConfigEncoderCwButtonNumberEl.value, 10) > 0
+      ? Number.parseInt(controlConfigEncoderCwButtonNumberEl.value, 10)
+      : null,
+    ccwButtonNumber: Number.isInteger(Number.parseInt(controlConfigEncoderCcwButtonNumberEl.value, 10))
+      && Number.parseInt(controlConfigEncoderCcwButtonNumberEl.value, 10) > 0
+      ? Number.parseInt(controlConfigEncoderCcwButtonNumberEl.value, 10)
+      : null,
+    signalMode: controlConfigSignalModeEl.value === "state" ? "state" : "pulse",
   };
+
+  const autoOutputMap = buildAutoOutputMap(componentType, nextConfig);
+
+  if (autoOutputMap) {
+    nextConfig.outputPress = autoOutputMap.outputPress ?? nextConfig.outputPress;
+    nextConfig.outputRelease = autoOutputMap.outputRelease ?? nextConfig.outputRelease;
+    nextConfig.outputOn = autoOutputMap.outputOn ?? nextConfig.outputOn;
+    nextConfig.outputOff = autoOutputMap.outputOff ?? nextConfig.outputOff;
+  }
+
+  page.state.componentConfigs[slotId] = nextConfig;
 
   if (componentType === "button" && page.state.componentConfigs[slotId].buttonMode === "momentary") {
     page.state.componentStates[slotId] = false;
@@ -1352,13 +1648,7 @@ function saveControlConfig() {
 async function emitControlOutput(page, slotId, outputType, componentType) {
   const config = getComponentConfig(page, slotId, componentType);
   const controlName = getControlLabel(page, slotId, componentType);
-  const outputMap = {
-    press: config.outputPress,
-    release: config.outputRelease,
-    on: config.outputOn,
-    off: config.outputOff,
-  };
-  const output = (outputMap[outputType] ?? "").trim();
+  const output = resolveConfiguredOutput(componentType, config, outputType);
   const timestamp = new Date();
   const displayTime = timestamp.toLocaleTimeString([], {
     hour: "2-digit",
@@ -1400,14 +1690,35 @@ async function emitControlOutput(page, slotId, outputType, componentType) {
   };
 
   try {
-    await fetch("/api/control-event", {
+    const response = await fetch("/api/control-event", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
     });
-    console.info("Control output sent:", payload);
+    const responseData = await response.json();
+
+    if (output && responseData.dispatched) {
+      page.state.lastOutput = `${controlName}: ${output} -> vJoy`;
+    } else if (output && !responseData.dispatched) {
+      const detail = responseData.dispatch_detail ? ` (${responseData.dispatch_detail})` : "";
+      page.state.lastOutput = `${controlName}: ${output} -> local only${detail}`;
+    }
+
+    page.state.eventLog[0] = {
+      time: displayTime,
+      text: page.state.lastOutput,
+    };
+    page.refs.outputMonitorValueEl.textContent = page.state.lastOutput;
+    page.refs.debugLogListEl.innerHTML = page.state.eventLog.map((entry) => `
+      <div class="debug-log-entry">
+        <span class="debug-log-time">${entry.time}</span>
+        <span class="debug-log-text">${entry.text}</span>
+      </div>
+    `).join("");
+    persistLayoutState();
+    console.info("Control output sent:", payload, responseData);
   } catch (error) {
     console.error("Control output dispatch failed:", error);
     page.state.lastOutput = `${controlName}: ${output} (dispatch failed)`;
@@ -1692,6 +2003,18 @@ function handleLiveControlPress(event) {
     return;
   }
 
+  if (filledControl.dataset.componentType === "rotary") {
+    liveRotaryGesture = {
+      page,
+      slotId: filledControl.dataset.slotId,
+      startX: event.clientX,
+      startY: event.clientY,
+      controlEl: filledControl,
+    };
+    pressedLiveControl = null;
+    return;
+  }
+
   if (filledControl.dataset.componentType === "button") {
     const slotId = filledControl.dataset.slotId;
     const config = getComponentConfig(page, slotId, "button");
@@ -1729,7 +2052,47 @@ function handleLiveControlPress(event) {
   }
 }
 
+function animateRotaryInteraction(controlEl, direction) {
+  if (!controlEl) {
+    return;
+  }
+
+  const cwClass = "pulse-cw";
+  const ccwClass = "pulse-ccw";
+  const activeClass = direction === "cw" ? cwClass : ccwClass;
+
+  controlEl.classList.remove(cwClass, ccwClass);
+  void controlEl.offsetWidth;
+  controlEl.classList.add(activeClass);
+
+  window.setTimeout(() => {
+    controlEl.classList.remove(activeClass);
+  }, 180);
+}
+
 function clearLiveControlPress(event) {
+  if (liveRotaryGesture && event?.type === "pointerup") {
+    const deltaX = event.clientX - liveRotaryGesture.startX;
+    const deltaY = event.clientY - liveRotaryGesture.startY;
+    const isTap = Math.abs(deltaX) < 12 && Math.abs(deltaY) < 12;
+    const isSwipe = Math.abs(deltaX) > 18 && Math.abs(deltaX) > Math.abs(deltaY);
+    let direction = null;
+
+    if (isSwipe) {
+      direction = deltaX > 0 ? "cw" : "ccw";
+    } else if (isTap) {
+      const rect = liveRotaryGesture.controlEl.getBoundingClientRect();
+      direction = event.clientX >= rect.left + rect.width / 2 ? "cw" : "ccw";
+    }
+
+    if (direction) {
+      animateRotaryInteraction(liveRotaryGesture.controlEl, direction);
+      emitControlOutput(liveRotaryGesture.page, liveRotaryGesture.slotId, direction, "rotary");
+    }
+  }
+
+  liveRotaryGesture = null;
+
   if (liveToggleGesture && event?.type === "pointerup") {
     const deltaX = event.clientX - liveToggleGesture.startX;
     const deltaY = event.clientY - liveToggleGesture.startY;
@@ -1846,6 +2209,7 @@ layoutPages.forEach((page) => {
 
   refs.layoutCanvasEl.addEventListener("pointerup", clearLiveControlPress);
   refs.layoutCanvasEl.addEventListener("pointerleave", () => {
+    liveRotaryGesture = null;
     liveToggleGesture = null;
     clearLiveControlPress();
   });

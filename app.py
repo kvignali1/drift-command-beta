@@ -1,7 +1,11 @@
-from flask import Flask, render_template, jsonify, request
+import os
 import time
+from flask import Flask, render_template, jsonify, request
+
+from vjoy_bridge import VJoyBridge
 
 app = Flask(__name__)
+vjoy_bridge = VJoyBridge(device_id=int(os.environ.get("DRIFT_COMMAND_VJOY_ID", "1")))
 
 
 @app.route("/")
@@ -29,8 +33,25 @@ def telemetry():
 @app.route("/api/control-event", methods=["POST"])
 def control_event():
     payload = request.get_json(silent=True) or {}
-    print(f"[control-event] {payload}", flush=True)
-    return jsonify({"ok": True, "received": payload})
+    output = payload.get("output", "")
+    output_type = payload.get("outputType", "")
+    result = vjoy_bridge.dispatch(output=output, output_type=output_type)
+    print(f"[control-event] payload={payload} result={result}", flush=True)
+    return jsonify({
+        "ok": True,
+        "received": payload,
+        "dispatched": result.ok,
+        "dispatch_message": result.message,
+        "dispatch_detail": result.detail,
+        "vjoy_status": vjoy_bridge.status(),
+    })
+
+
+@app.route("/api/output-status")
+def output_status():
+    return jsonify({
+        "vjoy": vjoy_bridge.status(),
+    })
 
 
 if __name__ == "__main__":

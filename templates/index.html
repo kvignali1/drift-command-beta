@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drift Command</title>
-  <link rel="stylesheet" href="/static/css/style.css?v=28" />
+  <link rel="stylesheet" href="/static/css/style.css?v=33" />
 </head>
 <body>
   <div class="app-shell">
@@ -33,6 +33,29 @@
           <input id="control-config-name" class="config-input" type="text" placeholder="Starter, Fan, Pit Limiter" />
         </label>
 
+        <label id="control-config-button-number-field" class="config-field">
+          <span id="control-config-button-number-label" class="config-label">VJoy Button #</span>
+          <input id="control-config-button-number" class="config-input" type="number" min="1" max="128" step="1" placeholder="13" />
+        </label>
+
+        <label id="control-config-encoder-cw-button-number-field" class="config-field hidden">
+          <span class="config-label">Encoder CW Button #</span>
+          <input id="control-config-encoder-cw-button-number" class="config-input" type="number" min="1" max="128" step="1" placeholder="6" />
+        </label>
+
+        <label id="control-config-encoder-ccw-button-number-field" class="config-field hidden">
+          <span class="config-label">Encoder CCW Button #</span>
+          <input id="control-config-encoder-ccw-button-number" class="config-input" type="number" min="1" max="128" step="1" placeholder="7" />
+        </label>
+
+        <label id="control-config-signal-mode-field" class="config-field hidden">
+          <span class="config-label">Signal Type</span>
+          <select id="control-config-signal-mode" class="config-input">
+            <option value="pulse">Pulse / Momentary</option>
+            <option value="state">Hold State</option>
+          </select>
+        </label>
+
         <label id="control-config-button-mode-field" class="config-field hidden">
           <span class="config-label">Button Mode</span>
           <select id="control-config-button-mode" class="config-input">
@@ -53,27 +76,27 @@
         </label>
 
         <label id="control-config-press-field" class="config-field">
-          <span class="config-label">Pressed Output</span>
+          <span id="control-config-press-label" class="config-label">Pressed Output</span>
           <input id="control-config-output-press" class="config-input" type="text" placeholder="BTN:13" />
         </label>
 
         <label id="control-config-release-field" class="config-field">
-          <span class="config-label">Released Output</span>
+          <span id="control-config-release-label" class="config-label">Released Output</span>
           <input id="control-config-output-release" class="config-input" type="text" placeholder="BTN:13:UP" />
         </label>
 
         <label id="control-config-on-field" class="config-field">
-          <span class="config-label">On Output</span>
+          <span id="control-config-on-label" class="config-label">On Output</span>
           <input id="control-config-output-on" class="config-input" type="text" placeholder="SW:IGNITION:ON" />
         </label>
 
         <label id="control-config-off-field" class="config-field">
-          <span class="config-label">Off Output</span>
+          <span id="control-config-off-label" class="config-label">Off Output</span>
           <input id="control-config-output-off" class="config-input" type="text" placeholder="SW:IGNITION:OFF" />
         </label>
       </div>
 
-      <div class="config-help">Examples: BTN:13, BTN:13:UP, SW:LIGHTS:ON, SW:LIGHTS:OFF</div>
+      <div class="config-help">Pick vJoy button numbers to auto-wire the control, or leave them blank and type custom outputs like BTN:13, BTN6:+, BTN6:-, SW:LIGHTS:ON.</div>
 
       <div class="confirm-actions">
         <button id="control-config-save" class="confirm-button confirm-button-danger" type="button">Save</button>
@@ -90,6 +113,6 @@
     <span class="page-dot"></span>
   </div>
 
-  <script src="/static/js/app.js?v=28"></script>
+  <script src="/static/js/app.js?v=33"></script>
 </body>
 </html>
