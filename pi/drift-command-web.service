@@ -1,0 +1,19 @@
+[Unit]
+Description=Drift Command Web App
+After=network-online.target drift-command-usb-gadget.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/drift-command
+Environment=DRIFT_COMMAND_OUTPUT_BACKEND=hid_gadget
+Environment=DRIFT_COMMAND_HID_PATH=/dev/hidg0
+Environment=DRIFT_COMMAND_HID_BUTTONS=128
+ExecStart=/opt/drift-command/.venv/bin/python /opt/drift-command/app.py
+Restart=on-failure
+RestartSec=2
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target

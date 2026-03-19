@@ -2,10 +2,10 @@ import os
 import time
 from flask import Flask, render_template, jsonify, request
 
-from vjoy_bridge import VJoyBridge
+from output_bridge import OutputBridge
 
 app = Flask(__name__)
-vjoy_bridge = VJoyBridge(device_id=int(os.environ.get("DRIFT_COMMAND_VJOY_ID", "1")))
+output_bridge = OutputBridge()
 
 
 @app.route("/")
@@ -35,7 +35,7 @@ def control_event():
     payload = request.get_json(silent=True) or {}
     output = payload.get("output", "")
     output_type = payload.get("outputType", "")
-    result = vjoy_bridge.dispatch(output=output, output_type=output_type)
+    result = output_bridge.dispatch(output=output, output_type=output_type)
     print(f"[control-event] payload={payload} result={result}", flush=True)
     return jsonify({
         "ok": True,
@@ -43,14 +43,14 @@ def control_event():
         "dispatched": result.ok,
         "dispatch_message": result.message,
         "dispatch_detail": result.detail,
-        "vjoy_status": vjoy_bridge.status(),
+        "output_status": output_bridge.status(),
     })
 
 
 @app.route("/api/output-status")
 def output_status():
     return jsonify({
-        "vjoy": vjoy_bridge.status(),
+        "output": output_bridge.status(),
     })
 
 

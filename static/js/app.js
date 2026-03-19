@@ -1699,8 +1699,10 @@ async function emitControlOutput(page, slotId, outputType, componentType) {
     });
     const responseData = await response.json();
 
+    const backendName = responseData.output_status?.backend ?? "controller";
+
     if (output && responseData.dispatched) {
-      page.state.lastOutput = `${controlName}: ${output} -> vJoy`;
+      page.state.lastOutput = `${controlName}: ${output} -> ${backendName}`;
     } else if (output && !responseData.dispatched) {
       const detail = responseData.dispatch_detail ? ` (${responseData.dispatch_detail})` : "";
       page.state.lastOutput = `${controlName}: ${output} -> local only${detail}`;

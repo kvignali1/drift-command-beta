@@ -1,0 +1,17 @@
+[Unit]
+Description=Drift Command Chromium Kiosk
+After=graphical.target drift-command-web.service
+Wants=drift-command-web.service
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStart=/bin/bash /opt/drift-command/pi/launch_kiosk.sh
+Restart=on-failure
+RestartSec=2
+User=pi
+Group=pi
+
+[Install]
+WantedBy=graphical.target

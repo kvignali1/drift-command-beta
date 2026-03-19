@@ -1,0 +1,12 @@
+[Unit]
+Description=Drift Command Pi 4 USB HID Gadget
+After=local-fs.target sys-kernel-config.mount
+Wants=sys-kernel-config.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash /opt/drift-command/pi/setup_pi4_usb_gadget.sh
+
+[Install]
+WantedBy=multi-user.target
